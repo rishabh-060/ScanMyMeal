@@ -33,7 +33,7 @@ export const GlobalProvider = ({ children }) => {
             dispatch(handleAddItemCart(responseData?.data));
           }
         } catch (error) {
-          toast.error(error?.response?.data?.message || 'Failed to fetch cart items');
+          toast.error('Failed to fetch cart items');
         } 
     };
 
@@ -96,7 +96,7 @@ export const GlobalProvider = ({ children }) => {
           dispatch(handleAddAddress(responseData.data))
         }
       } catch (error) {
-        toast.error(error?.response?.data?.message)
+        toast.error('Failed to fetching address')
       }
     }
 
@@ -111,7 +111,7 @@ export const GlobalProvider = ({ children }) => {
           dispatch(setOrders(responseData.data));
         }
       } catch (error) {
-        toast.error(error?.response?.data?.message || 'Failed to fetch orders');
+        toast.error('Failed to fetch orders');
       }
     }
 
