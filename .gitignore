@@ -1,0 +1,34 @@
+# Testing
+/coverage
+
+# Next.js build output
+frontend/.next/
+frontend/out/
+
+# Production build
+frontend/build/
+
+# Miscellaneous files
+.DS_Store
+*.pem
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+frontend/.env.local
+server/.env
+
+# Node modules
+frontend/node_modules/
+server/node_modules/
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
