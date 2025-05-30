@@ -26,14 +26,6 @@ const Profile = () => {
     mobile : user.mobile || ''
   })
 
-  useEffect(() => {
-    setUserData({
-      name : user.name,
-      mobile : user.mobile || '',
-    })
-  }, [user])
-  
-
   const validValue = Object.values(userData).every(el => el);
   
   const handleOnChange = (e) => {

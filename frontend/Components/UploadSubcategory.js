@@ -52,7 +52,7 @@ const UploadSubcategory = ({fetchData, close}) => {
             fetchData()
         }
     } catch (error) {
-        toast.error(error?.data.data.message)
+        toast.error('Subcategory upload failed. Please try again.')
     } finally {
         setLoading(false)
     }
@@ -76,7 +76,8 @@ const UploadSubcategory = ({fetchData, close}) => {
     const { data : ImageResponse } = response
 
     if (!ImageResponse || !ImageResponse.data || !ImageResponse.data.url) {
-        throw new Error("Image URL not found in response");
+        toast.warning("Image upload failed. Please try again.");
+        setLoadingImage(false);
     }
     
     setData((prev) => {

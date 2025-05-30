@@ -59,7 +59,7 @@ const Address = () => {
         <button onClick={() => setOpenAddress(true)} className='mr-1 bg-emerald-700 hover:bg-emerald-600 text-neutral-200 text-sm font-medium rounded-sm px-5 py-1.5'>Add new address <MdAddHome size={18} className='text-neutral-200 inline font-bold'/></button>
       </div>
 
-      <section className='bg-amber-300 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5'>
+      <section className='bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5'>
         <div className='grid gap-4'>
           {
             address?.length > 0 ? (

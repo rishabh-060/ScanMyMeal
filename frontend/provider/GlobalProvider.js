@@ -149,7 +149,7 @@ export const GlobalProvider = ({ children }) => {
         fetchAddress();
         fetchOrder();
       }
-  }, [user?.id]);
+    }, [user?.id]);
 
   return (
     <GlobalContext.Provider value={

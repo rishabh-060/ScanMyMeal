@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import isAdmin from '@/public/utils/isAdmin';
 import RestrictUser from '@/Components/RestrictUser';
 import MiniLoader from '@/Components/MiniLoader';
+import { setAllCategory } from '@/public/store/productSlice';
 
 
 const Category = () => {
@@ -31,7 +32,6 @@ const Category = () => {
   
   const [openUploadCategory, setOpenUploadCategory] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [categoryData, setCategoryData] = useState([])
   const [openEdit, setOpenEdit] = useState(false)
   const [openConfirmBox, setOpenConfirmBox] = useState(false)
   const [editData, setEditData] = useState({
@@ -44,11 +44,6 @@ const Category = () => {
   const [ isMobile ] = useMobile()
 
   const allCategory = useSelector(state => state.product.allCategory)
-
-  useEffect(() => {
-    setCategoryData(allCategory)
-    fetchCategory()
-  }, [allCategory])
 
   const handledeleteCategory = async () => {
     try {
@@ -117,17 +112,17 @@ const Category = () => {
         }
         
         {
-          !categoryData[0] && (
+          !allCategory[0] && (
             <NoData />
           )
         }
 
         {
-          categoryData[0] && <h1 className="text-2xl text-center font-bold text-amber-700 mb-6">Category List</h1>
+          allCategory[0] && <h1 className="text-2xl text-center font-bold text-amber-700 mb-6">Category List</h1>
         }
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-5 p-4 w-full h-full">
-          {categoryData.map((category, index) => (
+          {allCategory.map((category, index) => (
             <div
               key={index}
               className="flex flex-col items-center min-h-46 group  p-3 rounded-2xl shadow-md cursor-pointer transition-transform transform hover:scale-105 overflow-hidden relative bg-amber-100 hover:shadow-lg" 

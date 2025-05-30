@@ -33,7 +33,7 @@ const MyOrder = () => {
       <h1 className="text-3xl font-bold text-center text-emerald-600 mb-2 lg:mb-6">My Orders</h1>
       <Divider />
 
-      <section className="bg-amber-300 rounded-xl shadow-md w-full my-6 p-4 lg:p-6">
+      <section className="bg-amber-400 rounded-xl shadow-md w-full my-6 p-4 lg:p-6">
         {orders.length > 0 ? (
           <div className="space-y-4">
             {orders.map((order) => (
