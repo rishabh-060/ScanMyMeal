@@ -256,7 +256,6 @@ const updateUserDetails = async (req, res) => {
 
         const updateUser = await userModel.updateOne({ _id : userId }, {
             ...( name && { name : name }),
-            // ...( email && { email : email }),
             ...( mobile && { mobile : mobile }),
             ...( password && { password : hashedpass })
         })

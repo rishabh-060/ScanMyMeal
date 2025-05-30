@@ -60,6 +60,15 @@ const getAllProductsController = async (req, res) => {
             productModel.countDocuments(searchQuery)
         ])
 
+        if(!data || data.length === 0) {
+            return res.status(200).json({
+                success : true,
+                error : false,
+                message : "No Product Found",
+                data : []
+            })
+        }
+
         return res.status(200).json({
             success : true,
             error : false,
@@ -138,6 +147,15 @@ const getProductbySubcategory = async (req, res) => {
             productModel.countDocuments(query)
         ])
 
+        if(!data || data.length === 0) {
+            return res.status(200).json({
+                message : "No Product Found",
+                success : true,
+                error : false,
+                data : []
+            })
+        }
+
         return res.status(200).json({
             message : "Product Fetched Successfully",
             success : true,
@@ -163,6 +181,14 @@ const getProductDetailsController = async (req, res) => {
         const { productId } = req.body
 
         const product = await productModel.findOne({ _id : productId})
+
+        if(!product) {
+            return res.status(404).json({
+                message : "Product not found",
+                success : false,
+                error : true
+            })
+        }
 
         return res.status(200).json({
             message : 'Product Details',
@@ -261,6 +287,15 @@ const searchProductController = async (req, res) => {
             productModel.find(query).sort({createdAt : -1}).skip(skip).limit(limit).populate('category subCategory'),
             productModel.countDocuments(query)
         ])
+
+        if(!data || data.length === 0) {
+            return res.status(200).json({
+                message : "No Product Found",
+                error : false,
+                success : true,
+                data : []
+            })
+        }
 
         return res.status(200).json({
             message : "Product Data",

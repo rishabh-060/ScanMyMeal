@@ -144,10 +144,12 @@ export const GlobalProvider = ({ children }) => {
     , [cartItem])
 
     useEffect(() => {
-      fetchCartItem();
-      fetchAddress();
-      fetchOrder();
-  }, [user]);
+      if(user?.id){
+        fetchCartItem();
+        fetchAddress();
+        fetchOrder();
+      }
+  }, [user?.id]);
 
   return (
     <GlobalContext.Provider value={

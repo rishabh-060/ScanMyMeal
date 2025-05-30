@@ -55,6 +55,15 @@ const getSubcategoryController = async (req, res) => {
             category: Array.isArray(subCategory.category) ? subCategory.category : [subCategory.category]
         }));
 
+        if (!formattedData || formattedData.length === 0) {
+            return res.status(200).json({
+                message: "No Sub-Category Found",
+                error: false,
+                data: [],
+                success: true
+            });
+        }
+
         return res.status(200).json({
             data: formattedData,
             error: false,

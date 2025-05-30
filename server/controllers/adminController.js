@@ -20,11 +20,20 @@ const getAllOrdersController = async (req, res) => {
     const upcomingOrders = await orderModel.find({
       payment_status: { $nin: ['Paid', 'Cancelled'] }, // Adjust according to your data
     })
-      .populate('userId', 'name email') // Include user info (name and email)
-      .populate('productId', 'name price') // Include product details
-      .populate('delivery_address') // Include delivery address
-      .populate('table_num') // Include table details
-      .sort({ createdAt: -1 }); // Most recent orders first
+      .populate('userId', 'name email') 
+      .populate('productId', 'name price')
+      .populate('delivery_address')
+      .populate('table_num')
+      .sort({ createdAt: -1 }); 
+
+    if (!upcomingOrders || upcomingOrders.length === 0) {
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'No upcoming orders found.',
+        data: [],
+      });
+    }
 
     return res.status(200).json({
       error: false,
@@ -56,6 +65,15 @@ const getAllUsersController = async (req, res) => {
     }
 
     const users = await userModel.find({}).select('name avatar email mobile role status order_history').populate('order_history'); // Adjust the model name and fields as necessary
+
+    if (!users || users.length === 0) {
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'No users found.',
+        data: [],
+      });
+    }
     
     return res.status(200).json({
       error: false,
@@ -86,6 +104,16 @@ const getAllProductsLengthController = async (req, res) => {
     }
 
     const products = await productModel.find({}).select('_id');
+
+    if (!products || products.length === 0) {
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'No products found.',
+        data: 0,
+      });
+    }
+
     return res.status(200).json({
       error: false,
       success: true,
@@ -117,6 +145,7 @@ const convertToAdminController = async (req, res) => {
     const { userEmail } = req.body; 
 
     const admin = await userModel.updateOne({ email : userEmail }, { role: 'ADMIN' });
+    
 
     return res.status(200).json({
       error: false,

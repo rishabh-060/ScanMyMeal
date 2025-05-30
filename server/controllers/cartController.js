@@ -84,10 +84,10 @@ const getCartController = async (req, res) => {
         const cartItems = await cartModel.find({ userId: userId }).populate('product');
 
         if (!cartItems) {
-            return res.status(400).json({
+            return res.status(200).json({
                 message: 'No items in cart',
-                success: false,
-                error: true
+                success: true,
+                error: false
             });
         }
 

@@ -51,6 +51,15 @@ const getCategoryController = async (req, res) => {
     try {
         const data = await categoryModel.find().sort({ createdAt : -1 }) || []
 
+        if(!data || data.length === 0){
+            return res.status(200).json({
+                message : "No Category Found",
+                error : false,
+                data : [],
+                success : true
+            })
+        }
+
         return res.status(200).json({
             data : data,
             error : false,

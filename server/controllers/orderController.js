@@ -232,6 +232,15 @@ const getOrderProductsController = async (req, res) => {
 
         const orders = await orderModel.find({ userId: userId }).sort({ createdAt: -1 }).populate('delivery_address', 'address_line city state country pincode mobile')
 
+        if (!orders || orders.length === 0) {
+            return res.status(200).json({
+                error : false,
+                success : true,
+                message : "No orders found",
+                data : []
+            })
+        }
+
         return res.status(200).json({
             error : false,
             success : true,

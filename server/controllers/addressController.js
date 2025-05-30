@@ -58,10 +58,11 @@ const getAddressController = async (req, res) => {
         const address = await addressModel.find({ userId : userId }).sort({ createdAt : -1 })
 
         if (!address) {
-            return res.status(400).json({
+            return res.status(200).json({
                 message: 'No address found',
-                success: false,
-                error: true
+                success: true,
+                error: false,
+                data: []
             })
         }
         return res.status(200).json({
