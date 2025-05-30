@@ -48,7 +48,9 @@ const ProductList = () => {
         setTotalPageCount(responseData.totalNoPage)
       }
     } catch (error) {
-      toast.error(`Something went wrong while fetching products. Please try again later.`)
+      // toast.error(`Something went wrong while fetching products. Please try again later.`)
+      toast.error(error?.response?.data?.message);
+        console.log(error?.response?.data?.message);
     } finally {
       setLoading(false)
     }

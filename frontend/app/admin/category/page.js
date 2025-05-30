@@ -28,10 +28,7 @@ const Category = () => {
   }
   const dispatch = useDispatch();
 
-// Fetch categories on mount
-  useEffect(() => {
-    fetchCategory();
-  }, []);
+  
   const [openUploadCategory, setOpenUploadCategory] = useState(false)
   const [loading, setLoading] = useState(false)
   const [categoryData, setCategoryData] = useState([])
@@ -68,7 +65,7 @@ const Category = () => {
         fetchCategory()
       }
     } catch (error) {
-      toast.error(error?.data?.data?.message)
+      toast.error('Failed to delete category')
     }
   }
 
@@ -85,11 +82,15 @@ const Category = () => {
         dispatch(setAllCategory(responseData.data))
       }
     } catch (error) {
-        toast.error(error?.response?.data?.message)
+        toast.error('Failed to fetch categories')
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchCategory();
+  }, []);
 
   return (
     <main className='px-2 lg:px-5'>

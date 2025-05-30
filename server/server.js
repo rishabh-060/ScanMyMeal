@@ -20,6 +20,7 @@ app.use(cors({
     credentials: true,
     origin: process.env.FRONTEND_URL,
 }))
+dbConn()
 
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -42,4 +43,6 @@ app.use('/api/order', orderRouter)
 app.use('/api/admin', adminRouter)
 
 
-app.listen(PORT)
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+})
