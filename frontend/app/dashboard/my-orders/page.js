@@ -47,6 +47,12 @@ const MyOrder = () => {
                       </h2>
                     </div>
                     
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-700">
+                        Status: <span className={`text-base font-semibold ${order.order_status == 'pending' ? 'text-amber-600' : order.order_status == 'completed' ? 'text-green-600' : 'text-red-600'}`}>{order.order_status || 'Pending'}</span>
+                      </p>
+                    </div>
+
                     <div className="flex items-center gap-5 w-full">
                       <div>
                         {
