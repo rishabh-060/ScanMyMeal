@@ -136,15 +136,9 @@ export const GlobalProvider = ({ children }) => {
     , [cartItem])
 
     useEffect(() => {
-      if (user.id) {
-        fetchCartItem();
-        fetchAddress();
-        fetchOrder();
-      } else {
-        dispatch(handleAddItemCart([]));
-        dispatch(handleAddAddress([]));
-        dispatch(setOrders([]));
-      }
+      fetchCartItem();
+      fetchAddress();
+      fetchOrder();
   }, [user.id]);
 
   return (

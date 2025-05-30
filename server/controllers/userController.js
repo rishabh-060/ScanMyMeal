@@ -507,6 +507,14 @@ const userDetails = async (req, res) => {
     try {
         const userId = req.userId
 
+        if(!userId) {
+            return res.status(400).json({
+                message : 'Login required',
+                error : true,
+                success : false
+            })
+        }
+
         const user = await userModel.findById(userId).select('-password -refreshToken -forgot_password_otp')
 
         return res.status(200).json({

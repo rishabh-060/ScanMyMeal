@@ -113,6 +113,7 @@ For any queries, reach out to:
 
 - **Email**: [verma.rishabh924@gmail.com](mailto:verma.rishabh924@gmail.com)
 - **LinkedIn**: [Rishabh Verma](https://linkedin.com/in/rishabh-verma-277530223/)
+- **Project URL**:[ScanMyMeal](https://scanmymeal.netlify.app/)
 
 ---
 

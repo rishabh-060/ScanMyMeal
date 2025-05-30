@@ -42,6 +42,4 @@ app.use('/api/order', orderRouter)
 app.use('/api/admin', adminRouter)
 
 
-app.listen(PORT, () => {
-    console.log(PORT)
-})
+app.listen(PORT)
