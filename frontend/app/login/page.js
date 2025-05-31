@@ -59,6 +59,8 @@ const Login = () => {
 
       if(response.data.error){
         toast.error(response.data.message)
+        // setLoading(false);
+        // return;
       }
       
       if(response.data.success){
@@ -77,12 +79,11 @@ const Login = () => {
         })
 
         changePath('/')
-        // window.history.back()
       }
     } catch (error) {
       toast.error(error?.response?.data?.message)
     } finally {
-      setLoading(false); // Stop loading after API response
+      setLoading(false);
     }
   }
   return (
