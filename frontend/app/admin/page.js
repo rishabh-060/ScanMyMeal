@@ -52,7 +52,7 @@ const DashboardPage = () => {
     { title: 'Registered Users', value: users, icon: <Users className="text-amber-600" /> },
     { title: 'Categories', value: categories.length, icon: <Layers className="text-amber-600" /> },
     { title: 'Subcategories', value: subCategories.length, icon: <List className="text-amber-600" /> },
-    { title: 'Menu Items', value: products, icon: <PackageCheck className="text-amber-600" /> },
+    { title: 'Menu Items', value: products || 0, icon: <PackageCheck className="text-amber-600" /> },
     { title: 'Total Orders', value: orders.length, icon: <ShoppingCart className="text-amber-600" /> },
     { title: 'Revenue (₹)', value: `₹${totalRevenue.toLocaleString()}`, icon: <LineChart className="text-amber-600" /> },
   ]
