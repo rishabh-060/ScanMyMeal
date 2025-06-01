@@ -30,8 +30,8 @@ export default function LayoutWrapper({ children }) {
             <Navbar2 />
             {loading && <Loader />}
             {!loading && children}
-            <Footer />
             {pathname !== '/place-order' && <CartMobile />}
+            <Footer />
           </GlobalProvider>
         </PersistGate>
       </Provider>
