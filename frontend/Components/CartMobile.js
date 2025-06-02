@@ -10,7 +10,7 @@ const CartMobile = () => {
   const isCartPage = usePath('/dashboard/cart')
 
   return (
-    <div className='sticky bottom-3 p-3'>
+    <div className='fixed w-full bottom-3 p-3'>
         {
             (totalCartItem > 0 && !isCartPage)&& (
                 <div className='px-2 py-1 bg-amber-500 rounded-md lg:hidden flex gap-4 items-center justify-between'>
