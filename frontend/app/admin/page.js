@@ -35,7 +35,7 @@ const DashboardPage = () => {
       const response = await Axios({ ...summaryApi.productLength })
       const { data: responseData } = response
       if (responseData.success) {
-        setProducts(responseData.data.length)
+        setProducts(responseData?.data)
       }
     } catch (error) {
     }

@@ -2,6 +2,7 @@ const { default: mongoose } = require('mongoose')
 const orderModel = require('../models/orderModel');
 const userModel = require('../models/userModel');
 const productModel = require('../models/productModel');
+const sendMail = require('../helpers/tryMailer');
 
 const getAllOrdersController = async (req, res) => {
   try {
@@ -18,7 +19,7 @@ const getAllOrdersController = async (req, res) => {
 
     // Fetch all upcoming orders (not delivered or cancelled)
     const upcomingOrders = await orderModel.find({
-      payment_status: { $nin: ['Paid', 'Cancelled'] }, // Adjust according to your data
+      payment_status: { $nin: ['Paid', 'Cancelled'] },
     })
       .populate('userId', 'name email') 
       .populate('productId', 'name price')
@@ -103,7 +104,7 @@ const getAllProductsLengthController = async (req, res) => {
       });
     }
 
-    const products = await productModel.find({}).select('_id');
+    const products = await productModel.find({});
 
     if (!products || products.length === 0) {
       return res.status(200).json({
@@ -210,6 +211,13 @@ const suspendUserController = async (req, res) => {
     const { userEmail } = req.body; 
 
     const admin = await userModel.updateOne({ email : userEmail }, { status: 'Suspended' });
+    
+    await sendMail(
+      user.email,
+      'Suspension Notice | Scan My Meal',
+      'Your account has been suspended',
+      accountSuspensionTemplate(user.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
+    )
 
     return res.status(200).json({
       error: false,

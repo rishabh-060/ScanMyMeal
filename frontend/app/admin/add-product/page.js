@@ -180,7 +180,7 @@ const AddProduct = () => {
 
       <Divider />
 
-      <section className="bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5">
+      <section className="bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5 relative">
         {loading && <MiniLoader />}
 
         <h1 className='text-amber-700 font-bold text-center my-2 lg:my-6 text-2xl'>Menu Details</h1>
