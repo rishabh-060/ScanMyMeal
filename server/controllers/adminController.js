@@ -218,7 +218,7 @@ const suspendUserController = async (req, res) => {
       userEmail,
       'Suspension Notice | Scan My Meal',
       'Your account has been suspended',
-      accountSuspention(suspendedUser.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
+      accountSuspention(suspendedUser?.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
     )
 
     return res.status(200).json({
