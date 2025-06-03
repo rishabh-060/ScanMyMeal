@@ -212,6 +212,10 @@ const suspendUserController = async (req, res) => {
     const { userEmail } = req.body; 
 
     const admin = await userModel.updateOne({ email : userEmail }, { status: 'Suspended' });
+
+    const removeRefreshToken = await userModel.findByIdAndUpdate({ userId : user._id }, {
+      refresh_token : ''
+    })
     
     await sendMail(
       user.email,
