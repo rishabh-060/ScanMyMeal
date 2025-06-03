@@ -210,18 +210,15 @@ const suspendUserController = async (req, res) => {
     }
 
     const { userEmail } = req.body; 
+    const suspendedUser = await userModel.findOne({ email: userEmail });
 
     const admin = await userModel.updateOne({ email : userEmail }, { status: 'Suspended' });
-
-    const removeRefreshToken = await userModel.findByIdAndUpdate({ userId : user._id }, {
-      refresh_token : ''
-    })
     
     await sendMail(
-      user.email,
+      userEmail,
       'Suspension Notice | Scan My Meal',
       'Your account has been suspended',
-      accountSuspention(user.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
+      accountSuspention(suspendedUser.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
     )
 
     return res.status(200).json({
