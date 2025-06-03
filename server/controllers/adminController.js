@@ -3,6 +3,7 @@ const orderModel = require('../models/orderModel');
 const userModel = require('../models/userModel');
 const productModel = require('../models/productModel');
 const sendMail = require('../helpers/tryMailer');
+const accountSuspention = require('../templates/accountSuspention');
 
 const getAllOrdersController = async (req, res) => {
   try {
@@ -216,7 +217,7 @@ const suspendUserController = async (req, res) => {
       user.email,
       'Suspension Notice | Scan My Meal',
       'Your account has been suspended',
-      accountSuspensionTemplate(user.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
+      accountSuspention(user.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
     )
 
     return res.status(200).json({

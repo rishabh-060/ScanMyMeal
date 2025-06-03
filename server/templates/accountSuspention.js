@@ -1,4 +1,4 @@
-const accountSuspensionTemplate = (userName, suspensionDate, reason) => {
+const accountSuspension = (userName, suspensionDate, reason) => {
     return `
     <!DOCTYPE html>
     <html lang="en">
@@ -107,4 +107,4 @@ const accountSuspensionTemplate = (userName, suspensionDate, reason) => {
     `;
 };
 
-module.exports = accountSuspensionTemplate;
+module.exports = accountSuspension;
