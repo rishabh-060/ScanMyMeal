@@ -61,7 +61,7 @@ const Page = () => {
     <main className="bg-amber-50 min-h-screen py-4">
       <div className="container mx-auto px-3 flex flex-col md:flex-row gap-4 md:gap-6">
         {/* Sidebar */}
-        <aside className="md:w-64 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto bg-white border border-amber-200 rounded-lg shadow p-3">
+        <aside className="md:w-64 sticky top-20 md:z-20 max-h-[calc(100vh-6rem)] overflow-y-auto bg-white border border-amber-200 rounded-lg shadow p-3">
           <h2 className="text-lg font-semibold text-amber-700 mb-3">Subcategories</h2>
           <div className="flex flex-col gap-2">
             {displaySubcategory.map((s, index) => {
