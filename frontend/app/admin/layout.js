@@ -27,8 +27,8 @@ const page = ({ children }) => {
   ]
 
   return (
-    <main className="container mx-auto grid lg:grid-cols-[250px_1fr] gap-4 min-h-[72vh]">
-      <aside className="sticky top-0 px-4 py-4 bg-neutral-100 border-r border-neutral-300 hidden lg:block">
+    <main className="container mx-auto grid lg:grid-cols-[250px_1fr] gap-4 min-h-[72vh] py-4">
+      <aside className="sticky top-0 px-4 py-4 bg-neutral-100 border-r border-neutral-300 hidden lg:block rounded">
         <h3 className="text-amber-600 font-bold text-xl mb-4">Admin Panel</h3>
         <div className="grid gap-2 text-sm">
           {links.map((link, i) => (
@@ -47,7 +47,7 @@ const page = ({ children }) => {
         </div>
       </aside>
 
-      <main className="p-4 bg-neutral-100">{children}</main>
+      <main className="p-4 bg-neutral-100 rounded">{children}</main>
     </main>
   )
 }

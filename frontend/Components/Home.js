@@ -43,7 +43,7 @@ const Home = () => {
       {/* Category Section */}
       <div className="w-full mt-3 lg:mt-7 mb-2 lg:mb-4 px-1.5">
         <h1 className="text-base lg:text-xl font-semibold text-amber-700">
-          Browse by Category
+          🍱 Browse by Category
         </h1>
       </div>
 

@@ -139,6 +139,13 @@ const page = () => {
             )}
           </div>
 
+            {/* description */}
+          <div className="my-2 lg:my-4">
+            <p className="font-medium text-amber-800 text-sm lg:text-base my-2">Description</p>
+            <p className="font-medium text-xs lg:text-sm text-neutral-600 ">{data.description}</p>
+          </div>
+
+
           <h2 className="font-medium text-amber-800 text-sm lg:text-base my-3">Why order with us?</h2>
           <div className="grid gap-4">
             {[
@@ -179,23 +186,20 @@ const page = () => {
         </div>
       </div>
 
-      <div className='px-2'>
-        <div className="mt-2 lg:mt-4">
-          <p className="font-semibold lg:text-medium text-lg lg:text-xl text-neutral-800">Description</p>
-          <p className="text-sm lg:text-base lg:font-semibold text-gray-600 leading-relaxed mt-1">{data.description}</p>
-        </div>
+      <div className="mt-6 px-2">
+        <h2 className="text-lg font-semibold text-amber-700 mb-4">More Details</h2>
 
-        <div>
-          {
-            data.more_details && Object.keys(data?.more_details).map((elem, index) => {
-              return (
-                <div className="mt-4" key={index+'bhbjnajnvnjvnjb'}>
-                  <p className="font-semibold lg:text-medium text-lg lg:text-xl text-neutral-800">{elem}</p>
-                  <p className="text-sm lg:text-base lg:font-semibold text-gray-600 leading-relaxed mt-1">{data?.more_details[elem]}</p>
-                </div>
-              )
-            })
-          }
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {data.more_details &&
+            Object.entries(data.more_details).map(([key, value], index) => (
+              <div
+                key={index + 'more-detail'}
+                className="bg-white border border-amber-200 rounded-xl shadow-sm p-4 hover:shadow-md transition duration-300"
+              >
+                <p className="text-base md:text-lg font-semibold text-amber-800 mb-1">{key}</p>
+                <p className="text-sm md:text-base text-gray-700 leading-relaxed">{value}</p>
+              </div>
+            ))}
         </div>
       </div>
 
