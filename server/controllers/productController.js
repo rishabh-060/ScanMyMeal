@@ -18,8 +18,6 @@ const createProductController = async (req, res) => {
             name, description, image, category, subCategory, unit, stock, price, discount, more_details
         })
 
-        console.log(description)
-
         const saveProduct = await product.save()
 
         return res.status(200).json({
