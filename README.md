@@ -57,19 +57,69 @@
 
 ## 📂 Project Structure
 
-```
-/backend
+``` bash
+/server
+  /config
+    conn.js
+    stripe.js
   /controllers
+    userController.js
+    addressController.js
+    adminController.js
+    ...
+    ...
+  /helpers
+    tryMailer.js
+  /middlewares
+    auth.js
+    admin.js
+    multer.js
   /models
+    userModel.js
+    addressModel.js
+    adminModel.js
+    ...
+    ...
   /routes
+    userRouter.js
+    addressRouter.js
+    adminRouter.js
+    ...
+    ...
+  /templates
+    sentOtpTemplate.js
+    verifymailTemplate.js
+    ...
   /utils
+    generateOTP.js
+    ...
+    ...
   server.js
+
 /frontend
-  /components
-  /pages
-  /redux
-  /styles
-  /utils
+  /app
+    /admin
+    /cancel
+    /category
+    ...
+    ...
+  /Components
+    AccountSuspention.js
+    AddAddress.js
+    AddMoreDetails.js
+    ...
+    ...
+  /hooks
+    changePath.js
+    useMobile.js
+    usePath.js
+  /provider
+    GlobalProvider.js
+  /public
+    /assets
+    /common
+    /store
+    /utils
   .env
   package.json
 ```
