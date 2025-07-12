@@ -52,7 +52,7 @@ const Search = () => {
   }
 
   useEffect(() => {
-    fetchData()
+    if(searchQuery) fetchData()
   },[page, searchQuery])
 
   const handleFetchMore = () => {
