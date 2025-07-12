@@ -1,23 +1,38 @@
 "use client"
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { IoSearch } from 'react-icons/io5'
 import { FaArrowLeft } from 'react-icons/fa'
 import { TypeAnimation } from 'react-type-animation'
 import usePath from '@/hooks/usePath'
 import useChangePath from '@/hooks/changePath'
+import { useSearchParams } from 'next/navigation'
 
 const Search = () => {
 
+  const [url, setUrl] = useState('/search')
   const isSearch = usePath('/search')
   const changePath = useChangePath()
+  const {q} = useSearchParams()
+  
+  const debounce = (func, delay) => {
+    let timeOutId;
+    return (...arg) => {
+      clearTimeout(timeOutId);
+      timeOutId = setTimeout(() => func(...arg), delay)
+    }
+  }
 
+  const handleSearchQuery = debounce((args) => {setUrl(`/search?q=${args}`)}, 150)
+  
   const handleOnchange = (e) => {
     const value = e.target.value
-
-    const url = `/search?q=${value}`
-    changePath(url)
+    handleSearchQuery(value)
   }
+
+  useEffect(() => {
+    changePath(url)
+  }, [url])
 
   return (
     <div className='w-full min-w-[300px] lg:min-w-[420px] h-9 lg:h-12 text-sm lg:text-md rounded-full border border-neutral-100 bg-slate-100 overflow-hidden flex items-center cursor-pointer'>
