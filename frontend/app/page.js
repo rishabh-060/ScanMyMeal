@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { setUserDetails } from "@/public/store/userSlice";
 import { useDispatch } from "react-redux";
 import useMobile from "@/hooks/useMobile";
-import { setAllCategory, setAllSubCategory, setLoadingCategory } from "@/public/store/productSlice";
+import { setAllCategory, setAllSubCategory, setLoadingCategory, setProduct } from "@/public/store/productSlice";
 import Axios from "@/public/utils/Axios";
 import summaryApi from "@/public/common/summaryApi";
 import { toast } from "react-toastify";
@@ -56,7 +56,6 @@ const page = () => {
     }
   };
 
-  const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -73,7 +72,7 @@ const page = () => {
 
       const { data: responseData } = response;
       if (responseData.success) {
-        setProducts(responseData.data);
+        dispatch(setProduct(responseData.data));
       }
     } catch (error) {
       toast.error(error?.response?.data?.message);

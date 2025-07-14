@@ -10,7 +10,7 @@ import { useSearchParams } from 'next/navigation'
 
 const Search = () => {
 
-  const [url, setUrl] = useState('/search')
+  const [url, setUrl] = useState('')
   const isSearch = usePath('/search')
   const changePath = useChangePath()
   const {q} = useSearchParams()
