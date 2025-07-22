@@ -51,27 +51,28 @@ const Navbar = () => {
   }
 
   return (
-    <header className='z-50 h-22 w-full lg:h-18 shadow-md lg:shadow-lg pr-5 lg:pr-10 lg:px-2 sticky top-0 flex flex-col justify-center bg-white'>
+    <header className='z-50 h-22 w-full lg:h-18 shadow-md lg:shadow-lg pr-5 lg:pr-10 lg:px-5 sticky top-0 flex flex-col justify-center bg-gray-50'>
       {
         !(isSearchPage && isMobile) && (
           <div className='flex items-center justify-between h-full w-full'>
             {/* LOGO part */}
-            <Link href='/'>
+            <Link href='/' className='flex items-end gap-2 h-fit'>
                 <Image
-                  className='rounded-xl bg-center hidden lg:block'
-                  src={`/assets/logo.png`}
+                  className='rounded bg-center hidden lg:block'
+                  src={`/assets/favicon.png`}
                   alt="Scan My Meal"
-                  height={60}
-                  width={220}
+                  height={38}
+                  width={38}
                 />
                 {/* mobile view */}
                 <Image
-                  className='rounded-xl bg-center lg:hidden'
-                  src={`/assets/logo.png`}
+                  className='rounded bg-center lg:hidden'
+                  src={`/assets/favicon.png`}
                   alt="Scan My Meal"
-                  height={60}
-                  width={180}
+                  height={24}
+                  width={24}
                 />
+                <span className='text-base md:text-xl tracking-wider font-bold text-amber-600 border-b-2 border-b-amber-600'>Scan My Meal</span>
             </Link>
 
             {/* Search section */}
@@ -88,7 +89,7 @@ const Navbar = () => {
                     !user.id ? (
                       <FaRegCircleUser size={22}/>
                     ) : (
-                      <div className='h-8 w-8 border-emerald-600 border-[1px] rounded-full overflow-hidden object-center object-cover'>
+                      <div className='h-8 w-8 border-amber-600 border-[1px] rounded-full overflow-hidden object-center object-cover'>
                         <img
                           src={user.avatar}
                           alt={user.name}
@@ -104,7 +105,7 @@ const Navbar = () => {
               <div className='hidden lg:flex items-center gap-10 select-none'>
                 { 
                   (!user?.id) ? (
-                    <Link href={'/login'} className='text-green-800 font-medium text-lg cursor-pointer'>Login</Link>
+                    <Link href={'/login'} className='text-amber-800 font-medium text-lg cursor-pointer'>Login</Link>
                   ) : (
                     <div className='relative' ref={menuRef}>
                       <div onClick={() => setOptionUserMenu(!optionUserMenu)} className='flex items-center gap-1.5 text-green-800 font-medium text-lg cursor-pointer'>
