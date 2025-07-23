@@ -54,7 +54,7 @@ const Navbar = () => {
     <header className='z-50 h-22 w-full lg:h-18 shadow-md lg:shadow-lg pr-5 lg:pr-10 lg:px-5 sticky top-0 flex flex-col justify-center bg-gray-50'>
       {
         !(isSearchPage && isMobile) && (
-          <div className='flex items-center justify-between h-full w-full'>
+          <div className='flex items-center justify-between h-full w-full pl-5'>
             {/* LOGO part */}
             <Link href='/' className='flex items-end gap-2 h-fit'>
                 <Image
@@ -84,7 +84,7 @@ const Navbar = () => {
 
             {/* login & My cart */}
             <div>
-              <button className='text-green-800 font-medium lg:hidden' onClick={handleMobileUser}>
+              <button className='text-amber-700 font-medium lg:hidden' onClick={handleMobileUser}>
                   {
                     !user.id ? (
                       <FaRegCircleUser size={22}/>
