@@ -90,7 +90,7 @@ const AddToCartButton = ({ data }) => {
     <div>
       {
         isAvailable ? (
-          <div className="flex items-center gap-0.5 rounded-md justify-center bg-white">
+          <div className="flex items-center gap-0.5 rounded-md justify-center bg-transparent">
           <button
             className="w-8 h-8 flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white text-lg font-bold rounded transition-transform hover:scale-105"
             onClick={handleDecreaseItem}

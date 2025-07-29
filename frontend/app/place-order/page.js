@@ -12,6 +12,7 @@ import { MdOutlinePayments, MdOutlineLocationOn } from 'react-icons/md'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { loadStripe } from '@stripe/stripe-js'
+import { useSearchParams } from 'next/navigation'
 
 const Page = () => {
   const address = useSelector(state => state?.addresses?.addressList)
@@ -21,6 +22,8 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState('delivery')
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch();
+  const params = useSearchParams()
+  const tableNo = params.get('tableId') || '';
 
   const {
     cartItem,
@@ -38,31 +41,41 @@ const Page = () => {
 
   const handleCashOnDeliveryButton = async () => {
     setLoading(true)
-    if (!SelectedAddress) {
-      toast.error('Please select an address')
-      setLoading(false)
-      return
+    if(activeTab === 'delivery'){
+      if (!SelectedAddress) {
+        toast.error('Please select an address')
+        setLoading(false)
+        return
+      }
+    }else if (activeTab === 'table') {
+      if(!tableNo) {
+        toast.error('Please select an address')
+        setLoading(false)
+        return
+      }
     }
     try {
-      const response = await Axios({
-        ...summaryApi.CodOrder,
-        data: {
-          list_item: cartItem,
-          addressId: address[SelectedAddress]?._id,
-          totalAmt: totalCartPrice,
-          subTOtalAmt: totalCartPrice,
+      if(activeTab === 'delivery') {
+        const response = await Axios({
+          ...summaryApi.CodOrder,
+          data: {
+            list_item: cartItem,
+            addressId: address[SelectedAddress]?._id,
+            totalAmt: totalCartPrice,
+            subTOtalAmt: totalCartPrice,
+          }
+        })
+
+        const { data: responseData } = response
+
+        if (responseData.success) {
+          if (fetchCartItem) fetchCartItem()
+          if (fetchOrder) fetchOrder()
+
+          changePath('/success?text=Order')
+          AlertMessage('Successfully', responseData?.message, 'success')
+          dispatch(setOrderSuccess('Order'))
         }
-      })
-
-      const { data: responseData } = response
-
-      if (responseData.success) {
-        if (fetchCartItem) fetchCartItem()
-        if (fetchOrder) fetchOrder()
-
-        changePath('/success?text=Order')
-        AlertMessage('Successfully', responseData?.message, 'success')
-        dispatch(setOrderSuccess('Order'))
       }
     } catch (error) {
       toast.error(error?.response?.data?.message)
@@ -114,7 +127,7 @@ const Page = () => {
 
   return (
     <section className="flex items-center justify-center px-4 py-6">
-      <div className="w-full h-full max-h-4xl lg:max-h-142 bg-white rounded-2xl shadow-2xl p-6 space-y-6">
+      <div className="w-full h-full max-h-4xl lg:max-h-142 bg-white rounded-2xl shadow-lg p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-4">
           <h2 className="text-xl font-semibold text-neutral-800 tracking-wide">
@@ -197,7 +210,7 @@ const Page = () => {
               <div className="bg-amber-100 p-4 rounded-md border border-amber-600 border-dashed text-center">
                 <p className="text-sm font-medium text-neutral-700">
                   Selected Table No:
-                  <span className="text-amber-800 text-xl font-bold ml-2">{tableId}</span>
+                  <span className={`${tableId? 'text-amber-700 text-xl' : 'text-neutral-700'} font-bold ml-2 min-w-44 w-44 max-w-44 text-center py-1 px-6 rounded-lg border-2 border-amber-700 `}>{tableId ? tableId : 'Scan QR'}</span>
                 </p>
               </div>
             )}

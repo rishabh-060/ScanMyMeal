@@ -51,7 +51,7 @@ const Navbar = () => {
   }
 
   return (
-    <header className='z-50 h-22 w-full lg:h-18 shadow-md lg:shadow-lg pr-5 lg:pr-10 lg:px-5 sticky top-0 flex flex-col justify-center bg-gray-50'>
+    <header className='z-50 h-22 w-full lg:h-18 shadow-md lg:shadow-lg pr-5 lg:pr-10 lg:px-5 sticky top-0 flex flex-col justify-center bg-amber-50'>
       {
         !(isSearchPage && isMobile) && (
           <div className='flex items-center justify-between h-full w-full pl-5'>
@@ -108,7 +108,7 @@ const Navbar = () => {
                     <Link href={'/login'} className='text-amber-800 font-medium text-lg cursor-pointer'>Login</Link>
                   ) : (
                     <div className='relative' ref={menuRef}>
-                      <div onClick={() => setOptionUserMenu(!optionUserMenu)} className='flex items-center gap-1.5 text-green-800 font-medium text-lg cursor-pointer'>
+                      <div onClick={() => setOptionUserMenu(!optionUserMenu)} className='flex items-center gap-1.5 text-amber-800 font-medium text-lg cursor-pointer'>
                       <span className='h-8 w-8 hover:h-9 hover:w-9 border-emerald-600 border-[1px] rounded-full overflow-hidden object-center object-cover'>
                         <img
                           src={user.avatar || ''}

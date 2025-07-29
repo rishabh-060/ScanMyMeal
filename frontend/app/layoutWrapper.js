@@ -26,7 +26,23 @@ export default function LayoutWrapper({ children }) {
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <GlobalProvider>
-            <ToastContainer />
+            <ToastContainer
+              position="top-center"
+              autoClose={4000}
+              newestOnTop
+              closeOnClick
+              pauseOnFocusLoss
+              pauseOnHover
+              draggable
+              hideProgressBar={false}
+              theme="colored"
+              toastClassName={() =>
+                "relative flex items-start gap-3 bg-gray-900 text-yellow-300 rounded-xl shadow-lg px-6 py-4 mb-4 w-full max-w-md mx-auto animate-toast-in"
+              }
+              bodyClassName="text-sm font-medium leading-snug"
+              progressClassName="bg-yellow-400 h-1 rounded-b-xl"
+              iconClassName="!w-6 !h-6 mt-[2px]"
+            />
             <Navbar2 />
             {loading && <Loader />}
             {!loading && children}

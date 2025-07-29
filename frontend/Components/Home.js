@@ -2,12 +2,13 @@
 import useChangePath from "@/hooks/changePath";
 import { ValidUrlConvert } from "@/public/utils/ValidUrlConvert";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CategoryWiseProduct from "./CategoryWiseProduct";
 import { toast } from "react-toastify";
 import { useSearchParams } from "next/navigation";
 import { setTableId } from "@/public/store/addressSlice";
+import Loader from "./Loader";
 
 const Home = () => {
   const loadingCategory = useSelector(state => state.product.loadingCategory)
@@ -19,11 +20,14 @@ const Home = () => {
   const params = useSearchParams()
   const tableNo = params.get('tableId') || '';
 
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
     dispatch(setTableId(tableNo))
   }, [tableNo])
 
   const handleRedirectProductList = (id, cat) => {
+    setLoading(true)
     const subCategory = subCategoryData.find((sub) => {
       const filterData = sub.category.some((c) => c._id === id)
         return filterData ? true : null
@@ -33,10 +37,12 @@ const Home = () => {
 
     const url = `/category/${ValidUrlConvert(cat)}-${id}/subcategory/${ValidUrlConvert(subCategory.name)}-${subCategory._id}`
     changePath(url)
+    setLoading(false)
   }
 
   return (
     <section className="container mx-auto rounded-lg">
+      {loading && <Loader />}
       {/* Responsive Banner */}
       <div className={`w-full h-32 md:min-h-64 rounded-lg overflow-hidden bg-amber-100 shadow-lg`}>
         <picture>
