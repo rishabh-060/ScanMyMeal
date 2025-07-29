@@ -1,5 +1,4 @@
 'use client'
-
 import AddAddress from '@/Components/AddAddress'
 import useChangePath from '@/hooks/changePath'
 import { useGlobalContext } from '@/provider/GlobalProvider'
@@ -15,7 +14,8 @@ import { toast } from 'react-toastify'
 import { loadStripe } from '@stripe/stripe-js'
 
 const Page = () => {
-  const address = useSelector(state => state.addresses.addressList)
+  const address = useSelector(state => state?.addresses?.addressList)
+  const tableId = useSelector(state => state?.addresses?.tableId)
   const [openAddress, setOpenAddress] = useState(false)
   const [SelectedAddress, setSelectedAddress] = useState(null)
   const [activeTab, setActiveTab] = useState('delivery')
@@ -197,7 +197,7 @@ const Page = () => {
               <div className="bg-amber-100 p-4 rounded-md border border-amber-600 border-dashed text-center">
                 <p className="text-sm font-medium text-neutral-700">
                   Selected Table No:
-                  <span className="text-amber-800 text-xl font-bold ml-2">20</span>
+                  <span className="text-amber-800 text-xl font-bold ml-2">{tableId}</span>
                 </p>
               </div>
             )}

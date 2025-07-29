@@ -1,7 +1,7 @@
 "use client"
 import Axios from '@/public/utils/Axios';
 import Link from 'next/link';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FaUnlockKeyhole, FaRegEyeSlash, FaRegEye, FaMobileScreen } from "react-icons/fa6";
 import { toast } from 'react-toastify';
 import summaryApi from '@/public/common/summaryApi';
@@ -20,9 +20,11 @@ const Login = () => {
   const changePath = useChangePath()
   const router = useRouter()
 
-  // if(user?.id){
-  //   router.back()
-  // }
+  useEffect(() => {
+    if (user?.id) {
+      router.back()
+    }
+  }, [])
 
   const [data, setdata] = useState({
     email: "",

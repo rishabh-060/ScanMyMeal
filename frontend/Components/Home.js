@@ -2,10 +2,12 @@
 import useChangePath from "@/hooks/changePath";
 import { ValidUrlConvert } from "@/public/utils/ValidUrlConvert";
 import Link from "next/link";
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import CategoryWiseProduct from "./CategoryWiseProduct";
 import { toast } from "react-toastify";
+import { useSearchParams } from "next/navigation";
+import { setTableId } from "@/public/store/addressSlice";
 
 const Home = () => {
   const loadingCategory = useSelector(state => state.product.loadingCategory)
@@ -13,6 +15,13 @@ const Home = () => {
   const subCategoryData = useSelector(state => state.product.allSubCategory)
 
   const changePath = useChangePath()
+  const dispatch = useDispatch();
+  const params = useSearchParams()
+  const tableNo = params.get('tableId') || '';
+
+  useEffect(() => {
+    dispatch(setTableId(tableNo))
+  }, [tableNo])
 
   const handleRedirectProductList = (id, cat) => {
     const subCategory = subCategoryData.find((sub) => {
@@ -29,13 +38,13 @@ const Home = () => {
   return (
     <section className="container mx-auto rounded-lg">
       {/* Responsive Banner */}
-      <div className={`w-full rounded-lg overflow-hidden bg-amber-100 shadow-lg`}>
+      <div className={`w-full h-32 md:min-h-64 rounded-lg overflow-hidden bg-amber-100 shadow-lg`}>
         <picture>
           <source media="(min-width: 1024px)" srcSet="/assets/banner2.png" />
           <img
             src="/assets/banner2.png"
             alt="Banner"
-            className="w-full h-auto object-cover"
+            className="w-full h-full object-cover"
           />
         </picture>
       </div>
@@ -49,7 +58,7 @@ const Home = () => {
 
       {/* Category Grid */}
       <div className="w-full md:mb-10 overflow-x-auto no-scrollbar">
-        <div className="flex gap-3 min-w-max px-2 snap-x snap-mandatory overflow-x-auto">
+        <div className="flex gap-1 min-w-max snap-x snap-mandatory overflow-x-auto">
           {
             loadingCategory || categoryData.length === 0 ? (
               new Array(20).fill(null).map((_, index) => (
@@ -86,7 +95,7 @@ const Home = () => {
 
       {/* Display category products */}
       {
-        categoryData.map((c, index) => {
+        categoryData?.map((c, index) => {
           return <CategoryWiseProduct key={index+"productList"} id={c._id} name={c.name}/>
         })
       }

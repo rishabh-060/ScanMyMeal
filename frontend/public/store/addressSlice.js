@@ -2,6 +2,7 @@ const { createSlice } = require('@reduxjs/toolkit');
 
 const initialValue = {
     addressList: [],
+    tableId: '',
 }
 
 const addressSlice = createSlice({
@@ -11,8 +12,11 @@ const addressSlice = createSlice({
         handleAddAddress : (state, action) => {
             state.addressList = [ ...action.payload ]
         },
+        setTableId : (state, action) => {
+            state.tableId = action.payload
+        }
     }
 })
 
-export const { handleAddAddress } = addressSlice.actions
+export const { handleAddAddress, setTableId } = addressSlice.actions
 export default addressSlice.reducer

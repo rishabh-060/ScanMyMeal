@@ -9,7 +9,6 @@ import Axios from "@/public/utils/Axios";
 import summaryApi from "@/public/common/summaryApi";
 import { toast } from "react-toastify";
 import Home from "@/Components/Home";
-import { GlobalProvider } from "@/provider/GlobalProvider";
 
 const page = () => {
   const dispatch = useDispatch();
@@ -17,8 +16,10 @@ const page = () => {
 
   const fetchUser = async () => {
     const userData = await fetchUserDetails();
-
-    dispatch(setUserDetails(userData?.data));
+    
+    if(userData?.data?._id) {
+      dispatch(setUserDetails(userData?.data));
+    }
   };
 
   const fetchCategory = async () => {

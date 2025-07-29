@@ -1,7 +1,7 @@
 "use client";
 import Axios from "@/public/utils/Axios";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaUserPlus,
   FaUnlockKeyhole,
@@ -29,9 +29,11 @@ const Signup = () => {
   const changePath = useChangePath();
   const router = useRouter();
 
-  if (user?.id) {
-    router.back()
-  }
+  useEffect(() => {
+    if (user?.id) {
+      router.back()
+    }
+  }, [])
 
   const [loading, setLoading] = useState(false); // Add loading state
   const [showPass, setshowPass] = useState(true);

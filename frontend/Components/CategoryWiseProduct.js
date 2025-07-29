@@ -56,39 +56,44 @@ const CategoryWiseProduct = ({ id, name }) => {
   }, [])
 
   return (
-    <div className="container w-full mt-3 lg:mt-7 mb-2 lg:mb-4 px-1.5">
-      <div className="flex justify-between items-center gap-3 border-b-2 border-amber-700">
-        <h1 className="text-base lg:text-xl font-semibold text-amber-700 pl-1">{name}</h1>
+    <div className="container w-full mt-4 lg:mt-8 mb-3 lg:mb-5 px-2">
+      {/* Header */}
+      <div className="flex justify-between items-center gap-2 border-b border-amber-700 pb-2">
+        <h1 className="text-lg lg:text-2xl font-bold text-amber-700 capitalize tracking-wide">
+          {name}
+        </h1>
         <Link
           href="#"
           onClick={(e) => {
-            e.preventDefault()
-            const redirectUrl = handleRedirectProductList()
-            if (redirectUrl) {
-              changePath(redirectUrl)
-            }
+            e.preventDefault();
+            const redirectUrl = handleRedirectProductList();
+            if (redirectUrl) changePath(redirectUrl);
           }}
-          className="text-sm lg:text-base font-semibold text-amber-900 cursor-pointer hover:scale-105 transition-transform duration-150 pr-5"
+          className="text-sm lg:text-base font-semibold text-amber-800 hover:text-amber-600 transition-colors duration-200 px-2"
         >
-          See All
+          See All →
         </Link>
       </div>
 
-      <section className="w-full py-5 mx-auto flex items-center gap-4 overflow-x-auto no-scrollbar">
-        {
-          loading ? (
-            new Array(10).fill(null).map((_, index) => (
-              <CardLoading key={index + "loadComp"} />
-            ))
-          ) : data.length > 0 ? (
-            data.map((item, index) => {
-              if (!item._id) return null
-              return <CardProduct key={index + "catWiseProduct"} data={item} />
-            })
-          ) : (
-            <NoData />
-          )
-        }
+      {/* Scrollable Product Row */}
+      <section className="w-full py-5 flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory no-scrollbar">
+        {loading ? (
+          Array.from({ length: 10 }).map((_, index) => (
+            <div key={`load-${index}`} className="snap-start flex-shrink-0 w-40">
+              <CardLoading />
+            </div>
+          ))
+        ) : data.length > 0 ? (
+          data.map((item, index) => (
+            item._id && (
+              <div key={`product-${index}`} className="snap-start flex-shrink-0 w-40">
+                <CardProduct data={item} />
+              </div>
+            )
+          ))
+        ) : (
+          <NoData />
+        )}
       </section>
     </div>
   )

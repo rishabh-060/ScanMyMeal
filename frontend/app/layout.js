@@ -1,11 +1,10 @@
-import { icons } from "lucide-react";
 import "./globals.css";
 import LayoutWrapper from "./layoutWrapper";
 
 export const metadata = {
   title: "Scan My Meal",
   description: "Scan My Meal is a full-stack, real-time food ordering web application that allows users to browse food categories, add items to cart, place orders, and make payments. Admins can manage categories, subcategories, food items, and orders dynamically via an admin panel. This project also features secure authentication, profile management, and cloud-based media handling.",
-  keywords: "food ordering, real-time, web application, full-stack, categories, subcategories, cart, orders, payments, admin panel, authentication, profile management, cloud media",
+  keywords: "scan my meal, food ordering, real-time, web application, full-stack, categories, subcategories, cart, orders, payments, admin panel, authentication, profile management, cloud media",
   openGraph: {
     title: "Scan My Meal",
     description: "A full-stack, real-time food ordering web application.",

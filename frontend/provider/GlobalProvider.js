@@ -26,13 +26,13 @@ export const GlobalProvider = ({ children }) => {
           const response = await Axios({
             ...summaryApi.getCart,
           });
-    
           const { data: responseData } = response;
     
           if (responseData.success) {
             dispatch(handleAddItemCart(responseData?.data));
           }
         } catch (error) {
+          console.log('error', error)
           toast.error(error?.response?.data?.message);
         } 
     };
@@ -135,10 +135,14 @@ export const GlobalProvider = ({ children }) => {
     , [cartItem])
 
     useEffect(() => {
-      if(user?.id){
+      if( user?.id ) {
         fetchCartItem();
         fetchAddress();
         fetchOrder();
+      }else{
+        dispatch(handleAddItemCart([]));
+        dispatch(handleAddAddress([]));
+        dispatch(setOrders([]));
       }
     }, [user?.id]);
 
