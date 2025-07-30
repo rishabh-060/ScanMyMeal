@@ -63,7 +63,7 @@ const Page = () => {
         {/* Sidebar */}
         <aside className="md:w-64 sticky top-20 z-20 max-h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar bg-white border border-amber-200 rounded-lg shadow p-3">
           <h2 className="text-lg font-semibold text-amber-700 mb-3">Subcategories</h2>
-          <div className="flex flex-col gap-2">
+          <div className="flex md:flex-col gap-2">
             {displaySubcategory.map((s, index) => {
               const url = `/category/${ValidUrlConvert(s.category[0]?.name)}-${s.category[0]?._id}/subcategory/${ValidUrlConvert(s.name)}-${s._id}`;
               const isActive = subCategoryId === s._id;
@@ -72,7 +72,7 @@ const Page = () => {
                 <Link
                   key={index}
                   href={url}
-                  className={`flex items-center gap-3 p-2 rounded-md transition hover:shadow-sm ${
+                  className={`flex flex-col md:flex-row shrink-0 items-center gap-3 p-2 rounded-md transition hover:shadow-sm ${
                     isActive ? 'bg-amber-100 border border-amber-600' : 'bg-white border border-gray-200'
                   }`}
                 >
@@ -97,7 +97,7 @@ const Page = () => {
           </div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-3 md:gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4 mt-4">
             {loading
               ? Array.from({ length: 15 }).map((_, index) => (
                   <div
@@ -111,7 +111,7 @@ const Page = () => {
                   </div>
                 ))
               : data.length > 0
-              ? data.map((item, index) => <CardProduct key={index} data={item} />)
+              ? data.map((item, index) => <CardProduct key={index} data={item}/>)
               : (
                 <div className="col-span-full text-center text-amber-600 font-medium">
                   No products found in this subcategory.
