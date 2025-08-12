@@ -16,19 +16,29 @@ const layout = ({children}) => {
   }, [])
 
   return (
-    <section className='max-w-full min-h-[65vh] lg:min-h-[68vh] lg:m-2 px-4'>
-        <div className='container mx-auto grid lg:grid-cols-[250px_1fr] gap-4'>
-            <aside className='sticky top-0 px-4 overflow-y-auto bg-neutral-100 hidden lg:block py-2 border-r border-neutral-300'>
-                <BacktoHome />
-                <UserMenu />
-            </aside>
+    <section className="max-w-full min-h-[65vh] lg:min-h-[68vh] lg:m-2 px-4">
+      <div className="container mx-auto grid lg:grid-cols-[260px_1fr] gap-6">
+        
+        {/* Sidebar */}
+        <aside className="sticky top-4 px-4 overflow-y-auto hidden lg:block py-4 rounded-xl 
+          bg-white/80 backdrop-blur-md border border-neutral-200 shadow-lg 
+          max-h-[90vh] scrollbar-thin scrollbar-thumb-amber-400 scrollbar-track-transparent">
+          
+          <div className="mb-6">
+            <BacktoHome />
+          </div>
 
-            {React.Children.map(children, (child) => (
-                <main className="p-4 bg-neutral-100 ">
-                    {children}
-                </main>
-            ))}
-        </div>
+          <div className="space-y-4">
+            <UserMenu />
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="p-6 bg-white/60 backdrop-blur-lg rounded-xl shadow-md border border-neutral-200">
+          {React.Children.map(children, (child) => child)}
+        </main>
+
+      </div>
     </section>
   )
 }

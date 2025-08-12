@@ -47,62 +47,92 @@ const Address = () => {
   }
 
   return (
-    <main className='px-2 lg:px-5'>
-      {
-        isMobile && <BacktoHome />
-      }
-      <h1 className='text-emerald-600 font-bold text-center my-2 lg:my-6 text-2xl'>Saved Addresses</h1>
+    <main className="px-2 lg:px-5">
+      {isMobile && <BacktoHome />}
 
+      {/* Page Heading */}
+      <h1 className="text-amber-600 font-bold text-center my-3 lg:my-8 text-2xl">
+        Saved Addresses
+      </h1>
       <Divider />
 
-      <div className='w-full my-5 flex flex-row-reverse'>
-        <button onClick={() => setOpenAddress(true)} className='mr-1 bg-emerald-700 hover:bg-emerald-600 text-neutral-200 text-sm font-medium rounded-sm px-5 py-1.5'>Add new address <MdAddHome size={18} className='text-neutral-200 inline font-bold'/></button>
+      {/* Add New Address Button */}
+      <div className="w-full my-5 flex flex-row-reverse">
+        <button
+          onClick={() => setOpenAddress(true)}
+          className="flex items-center gap-1 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-md px-5 py-2 shadow-sm transition"
+        >
+          <MdAddHome size={18} /> Add New Address
+        </button>
       </div>
 
-      <section className='bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5'>
-        <div className='grid gap-4'>
-          {
-            address?.length > 0 ? (
-              address.map((item, index) => (
-                <div key={index} className={`bg-neutral-100 hover:bg-neutral-200 shadow-md rounded-lg p-4 flex justify-between transition-transform duration-100 ease-in-out ${ !item.status && 'hidden'}`}>
-                  <div>
-                    <h2 className='text-lg font-semibold text-neutral-700'>{item.address_line}</h2>
-                    <p className='text-neutral-500 font-semibold text-sm lg:text-base'>{item.city} - {item.state}</p>
-                    <p className='text-neutral-500 font-semibold text-sm lg:text-base'>{item.country} - {item.pincode}</p>
-                    <p className='text-neutral-500 font-semibold text-sm lg:text-base'>{item.mobile}</p>
-                  </div>
-
-                  <div className='flex gap-2 justify-end h-fit'>
-                    <button
-                      onClick={() => {
-                        setEditData(item)
-                        setOpenEditAddress(true)
-                      }}
-                      className='border-green-500 hover:border-green-600 text-white font-semibold text-sm rounded-md flex items-center'
-                    >
-                      <MdEdit size={22} className='mr-1 text-green-500 hover:text-green-600 font-semibold' />
-                    </button>
-                    <button
-                      onClick={() => handleDisableAddress(item._id)}
-                      className='border-red-500 hover:border-red-600 text-white font-semibold text-sm  rounded-md flex items-center'
-                    >
-                      <MdDelete size={22} className='mr-1 text-red-500 hover:text-red-600 font-semibold' />
-                    </button>
-                  </div>
+      {/* Address List */}
+      <section className="bg-gradient-to-br from-amber-50 via-white to-amber-50 rounded-xl w-full min-h-52 my-6 p-4 lg:p-6 shadow-inner">
+        <div className="grid gap-5">
+          {address?.length > 0 ? (
+            address.map((item, index) => (
+              <div
+                key={index}
+                className={`flex justify-between items-start bg-white/80 backdrop-blur-sm hover:bg-white rounded-lg p-5 shadow-md border border-amber-100 transition-transform duration-150 hover:scale-[1.01] ${
+                  !item.status && "hidden"
+                }`}
+              >
+                {/* Address Info */}
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    {item.address_line}
+                  </h2>
+                  <p className="text-gray-600 text-sm lg:text-base font-medium">
+                    {item.city} - {item.state}
+                  </p>
+                  <p className="text-gray-600 text-sm lg:text-base font-medium">
+                    {item.country} - {item.pincode}
+                  </p>
+                  <p className="text-gray-600 text-sm lg:text-base font-medium">
+                    {item.mobile}
+                  </p>
                 </div>
-              ))
-            ) : (
-              <div className='text-center text-gray-500'>No addresses found</div>
-            )
-          }
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditData(item);
+                      setOpenEditAddress(true);
+                    }}
+                    className="p-2 rounded-full bg-green-50 hover:bg-green-100 border border-green-300 transition"
+                  >
+                    <MdEdit
+                      size={20}
+                      className="text-green-600 hover:text-green-700"
+                    />
+                  </button>
+
+                  <button
+                    onClick={() => handleDisableAddress(item._id)}
+                    className="p-2 rounded-full bg-red-50 hover:bg-red-100 border border-red-300 transition"
+                  >
+                    <MdDelete
+                      size={20}
+                      className="text-red-600 hover:text-red-700"
+                    />
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500 py-6">
+              No addresses found.
+            </div>
+          )}
         </div>
       </section>
-      {
-        openAddress && <AddAddress close={() => setOpenAddress(false)}/>
-      }
-      {
-        openEditAddress && <EditAddress close={() => setOpenEditAddress(false)} editData={editData}/>
-      }
+
+      {/* Modals */}
+      {openAddress && <AddAddress close={() => setOpenAddress(false)} />}
+      {openEditAddress && (
+        <EditAddress close={() => setOpenEditAddress(false)} editData={editData} />
+      )}
     </main>
   )
 }

@@ -27,27 +27,42 @@ const page = ({ children }) => {
   ]
 
   return (
-    <main className="container mx-auto grid lg:grid-cols-[250px_1fr] gap-4 min-h-[72vh] py-4">
-      <aside className="sticky top-0 px-4 py-4 bg-neutral-100 border-r border-neutral-300 hidden lg:block rounded">
-        <h3 className="text-amber-600 font-bold text-xl mb-4">Admin Panel</h3>
+    <main className="container mx-auto grid lg:grid-cols-[260px_1fr] gap-6 min-h-[80vh] py-6">
+      {/* Sidebar */}
+      <aside
+        className="sticky top-4 px-5 py-6 
+                  bg-white/30 backdrop-blur-md border border-white/20 shadow-lg 
+                  hidden lg:flex flex-col rounded-2xl"
+      >
+        <h3 className="text-amber-500 font-extrabold text-2xl mb-6 tracking-tight">
+          Admin Panel
+        </h3>
+
         <div className="grid gap-2 text-sm">
           {links.map((link, i) => (
             <Link
               key={i}
               href={link.href}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md font-medium ${
-                pathname === link.href
-                  ? 'bg-amber-500 text-white'
-                  : 'text-neutral-600 hover:bg-amber-100 hover:text-neutral-900'
-              }`}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-300
+                ${
+                  pathname === link.href
+                    ? "bg-amber-500 text-white shadow-md"
+                    : "text-neutral-700 hover:bg-amber-100 hover:text-neutral-900"
+                }`}
             >
-              {link.icon} {link.label}
+              <span className="text-lg">{link.icon}</span>
+              {link.label}
             </Link>
           ))}
         </div>
       </aside>
 
-      <main className="p-4 bg-neutral-100 rounded">{children}</main>
+      {/* Main Content */}
+      <section
+        className="p-6 bg-white/40 backdrop-blur-md rounded-2xl shadow-lg border border-white/20"
+      >
+        {children}
+      </section>
     </main>
   )
 }
