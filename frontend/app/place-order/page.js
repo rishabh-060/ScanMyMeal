@@ -77,28 +77,6 @@ const Page = () => {
           dispatch(setOrderSuccess('Order'))
         }
       }
-      if(activeTab === 'table'){
-        const response = await Axios({
-          ...summaryApi.CodOrder,
-          data: {
-            list_item: cartItem,
-            tableId: tableId,
-            totalAmt: totalCartPrice,
-            subTOtalAmt: totalCartPrice,
-          }
-        })
-
-        const { data: responseData } = response
-
-        if (responseData.success) {
-          if (fetchCartItem) fetchCartItem()
-          if (fetchOrder) fetchOrder()
-
-          changePath('/success?text=Order')
-          AlertMessage('Successfully', responseData?.message, 'success')
-          dispatch(setOrderSuccess('Order'))
-        }
-      }
     } catch (error) {
       toast.error(error?.response?.data?.message)
     } finally {
@@ -149,7 +127,7 @@ const Page = () => {
 
   return (
     <section className="flex items-center justify-center px-4 py-6">
-      <div className="w-full h-full max-h-4xl lg:max-h-142 bg-gray-50 rounded-2xl p-6 space-y-6">
+      <div className="w-full h-full max-h-4xl lg:max-h-142 bg-white rounded-2xl shadow-lg p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-4">
           <h2 className="text-xl font-semibold text-neutral-800 tracking-wide">

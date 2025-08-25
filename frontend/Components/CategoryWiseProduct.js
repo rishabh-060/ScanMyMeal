@@ -14,6 +14,7 @@ import Loader from './Loader'
 const CategoryWiseProduct = ({ id, name }) => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
+  const [pageChange, setPageChange] = useState(false)
   const subCategoryData = useSelector(state => state.product.allSubCategory)
 
   const changePath = useChangePath()
@@ -58,6 +59,7 @@ const CategoryWiseProduct = ({ id, name }) => {
 
   return (
     <div className="container w-full mt-4 lg:mt-8 mb-3 lg:mb-5 px-2">
+      {pageChange && <Loader />}
       {/* Header */}
       <div className="flex justify-between items-center gap-2 border-b border-amber-700 pb-2">
         <h1 className="text-lg lg:text-2xl font-bold text-amber-700 capitalize tracking-wide">
@@ -67,8 +69,10 @@ const CategoryWiseProduct = ({ id, name }) => {
           href="#"
           onClick={(e) => {
             e.preventDefault();
+            setPageChange(true)
             const redirectUrl = handleRedirectProductList();
             if (redirectUrl) changePath(redirectUrl);
+            setPageChange(false)
           }}
           className="text-sm lg:text-base font-semibold text-amber-800 hover:text-amber-600 transition-colors duration-200 px-2"
         >

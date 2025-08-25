@@ -57,14 +57,14 @@ const Home = () => {
 
       {/* Category Section */}
       <div className="w-full mt-3 lg:mt-7 mb-2 lg:mb-4 px-1.5">
-        <h1 className="text-lg lg:text-2xl font-bold text-amber-700 capitalize tracking-wide">
-          🍱Browse by Category
+        <h1 className="text-base lg:text-xl font-semibold text-amber-700">
+          🍱 Browse by Category
         </h1>
       </div>
 
       {/* Category Grid */}
       <div className="w-full md:mb-10 overflow-x-auto no-scrollbar">
-        <div className="flex gap-0 md:gap-1 min-w-max snap-x snap-mandatory overflow-x-auto">
+        <div className="flex gap-1 min-w-max snap-x snap-mandatory overflow-x-auto">
           {
             loadingCategory || categoryData.length === 0 ? (
               new Array(20).fill(null).map((_, index) => (

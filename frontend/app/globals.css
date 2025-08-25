@@ -1,11 +1,8 @@
 @import "tailwindcss";
 
 
-
-body {
-  @apply min-h-screen font-sans transition-colors duration-300 ease-in-out 
-         bg-gradient-to-br from-amber-50 via-white to-amber-100 
-         dark:from-gray-900 dark:via-gray-950 dark:to-gray-900;
+body{
+  @apply bg-amber-50
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -31,21 +28,6 @@ body {
       transform: scale(1) translateY(0);
     }
   }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-}
-@keyframes fade-in {
-  0% { opacity: 0; transform: translateY(-20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out;
 }
 
 @layer utilities {

@@ -89,101 +89,61 @@ const Login = () => {
     }
   }
   return (
-    <section className="container w-full min-h-[65vh] lg:min-h-[68vh] mx-auto overflow-hidden relative px-4 flex items-center justify-center bg-[url('https://media.istockphoto.com/id/816774502/photo/indian-cuisine.webp?a=1&b=1&s=612x612&w=0&k=20&c=7OmRDK5H4ScpIAtsNnpzpG3qobfo_Q5SAO6_-a3d0F0=')] bg-cover bg-center">
-  
-      {/* Gradient overlay for better contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-transparent backdrop-blur-sm"></div>
-      
-      {/* Animated glow behind the form */}
-      <div className="absolute w-72 h-72 bg-amber-500/30 blur-3xl rounded-full animate-pulse -z-0"></div>
+    <section className='container w-full min-h-[65vh] lg:min-h-[68vh]  mx-auto px-4'>
+      <div className='bg-white w-full my-4 lg:my-6 mx-auto rounded'>
+        <p className='text-neutral-600 py-8 text-center lg:text-xl font-semibold'>Login</p>
 
-      <div className="relative backdrop-blur-lg bg-white/30 w-full sm:w-[90%] md:w-[450px] my-4 lg:my-6 mx-auto rounded-xl shadow-2xl border border-white/40 animate-fade-in">
-        
-        {/* Heading */}
-        <p className="text-gray-900 py-6 text-center lg:text-2xl font-bold tracking-wide border-b border-white/20">
-          <span className="text-amber-500 drop-shadow">Login</span> to Continue
-        </p>
 
-        <form className="grid gap-4 mt-4 pb-10 px-6" onSubmit={handleSubmit}>
+        <form className='grid gap-3 mt-2 lg:mt-4 pb-10' onSubmit={handleSubmit}>
 
-          {/* Email */}
-          <div className="flex items-center rounded-lg overflow-hidden bg-white/20 border border-white/40 shadow-sm focus-within:border-amber-500 transition-all duration-300 backdrop-blur-sm hover:scale-[1.02]">
-            <label className="flex items-center justify-center p-3 bg-amber-500 text-white transition-transform duration-200 hover:scale-110">
-              <FaMobileScreen size={22} />
-            </label>
+          <div className='flex w-[80vw] lg:w-[42vh] mx-auto rounded-md overflow-hidden bg-slate-100'>
+            <label className='flex items-center justify-center p-2 bg-green-700 text-amber-50' htmlFor='email'><FaMobileScreen size={25}/></label>
             <input
-              type="email"
-              id="email"
+              type='email'
+              id='email'
               autoFocus
               spellCheck="false"
-              className="w-full outline-none text-amber-700 font-medium px-3 py-2 bg-transparent placeholder-gray-200"
-              placeholder="Enter your Email"
-              name="email"
+              className='w-full outline-none text-green-700 font-semibold px-2'
+              placeholder='Enter Your Email id'
+              name='email'
               value={data.email}
               onChange={handleChange}
             />
           </div>
 
-          {/* Password */}
-          <div className="flex flex-col">
-            <div className="flex items-center rounded-lg overflow-hidden bg-white/20 border border-white/40 shadow-sm focus-within:border-amber-500 transition-all duration-300 backdrop-blur-sm hover:scale-[1.02]">
-              <label className="flex items-center justify-center p-3 bg-amber-500 text-white transition-transform duration-200 hover:scale-110">
-                <FaUnlockKeyhole size={20} />
-              </label>
+          <div className='flex flex-col mx-auto'>
+            <div className='flex w-[80vw] lg:w-[42vh] mx-auto rounded-md overflow-hidden bg-slate-100'>
+              <label className='flex items-center justify-center p-2 bg-green-700 text-amber-50' htmlFor='password'><FaUnlockKeyhole size={22}/></label>
               <input
-                type={showPass ? "text" : "password"}
-                id="password"
+                type={ (showPass)?('password'):('text') }
+                id='password'
                 spellCheck="false"
-                className="w-full outline-none text-amber-700 font-medium px-3 py-2 bg-transparent placeholder-gray-200"
-                placeholder="Enter your Password"
-                name="password"
+                className='w-full outline-none text-green-700 font-semibold px-2'
+                placeholder='Enter Your Password'
+                name='password'
                 value={data.password}
                 onChange={handleChange}
               />
-              <div
-                onClick={() => setshowPass(!showPass)}
-                className="flex items-center justify-center p-3 text-amber-500 hover:text-amber-600 cursor-pointer transition-transform duration-200 hover:scale-110"
-              >
-                {showPass ? <FaRegEyeSlash size={18} /> : <FaRegEye size={18} />}
+              <div onClick={() => {setshowPass(!showPass)}} className='flex items-center justify-center p-2 mr-1 text-green-800 font-semibold'>
+                { (showPass)?(<FaRegEyeSlash size={18}/>):(<FaRegEye size={18}/>) }
               </div>
             </div>
-            <Link
-              href="/forgot-password"
-              className="text-sm text-amber-500 text-right pr-1 pt-1 hover:underline"
-            >
-              Forgot Password?
-            </Link>
+            <Link href={'/forgot-password'} className='text-sm text-green-700 text-right pr-1 pt-1'>Forgot Password?</Link>
           </div>
 
-          {/* Submit */}
-          <button
-            disabled={!validValue || loading}
-            className={`relative overflow-hidden flex items-center justify-center rounded-full py-2 mt-3 lg:mt-4 text-white text-lg tracking-wide shadow-lg transition-all duration-300
-              ${validValue && !loading
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 hover:shadow-amber-500/50"
-                : "bg-gray-400 cursor-not-allowed"}`}
-          >
-            {/* Shimmer effect */}
-            {validValue && !loading && (
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></span>
-            )}
+          <button 
+            disabled={!validValue || loading} 
+            className={`flex items-center justify-center w-[76vw] lg:w-[40vh] mx-auto rounded-full py-2 mt-3 lg:mt-5 text-amber-50 text-lg tracking-widest 
+            ${validValue && !loading ? "bg-green-700 hover:bg-green-800" : "bg-gray-400 cursor-not-allowed"}`}>
             {loading ? (
               <>
-                <Loader2 className="animate-spin h-5 w-5 mr-2" /> Processing...
+                <Loader2 className="animate-spin h-5 w-5 mr-2"/> Processing...
               </>
-            ) : (
-              "Login"
-            )}
+            ) : "Login"}
           </button>
         </form>
 
-        {/* Footer */}
-        <p className="text-gray-900 py-4 text-center text-sm border-t border-white/20">
-          Not a member?{" "}
-          <Link className="text-amber-500 font-semibold hover:underline" href="/signup">
-            Signup
-          </Link>
-        </p>
+        <p className='text-neutral-600 pt-4 pb-4 text-center lg:text-lg'>Not a member ? <Link className='text-green-700 font-semibold' href={'/signup'}>Signup</Link></p>
       </div>
     </section>
   )

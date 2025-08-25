@@ -82,34 +82,27 @@ const Signup = () => {
   };
 
   return (
-    <section className="container w-full min-h-[65vh] lg:min-h-[68vh] mx-auto px-4 flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?auto=format&fit=crop&w=1650&q=80')] bg-cover bg-center relative overflow-hidden">
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-transparent backdrop-blur-sm"></div>
-
-      {/* Soft Glow */}
-      <div className="absolute w-72 h-72 bg-amber-500/30 blur-3xl rounded-full animate-pulse -z-0"></div>
-
-      {/* Glass Card */}
-      <div className="relative backdrop-blur-lg bg-white/30 w-full sm:w-[90%] md:w-[480px] my-4 lg:my-6 mx-auto rounded-xl shadow-2xl border border-white/40 animate-fade-in">
-        
-        {/* Heading */}
-        <p className="text-gray-900 py-6 text-center lg:text-2xl font-bold tracking-wide border-b border-white/20">
-          <span className="text-amber-500 drop-shadow">Sign Up</span> to Scan My Meal
+    <section className="container w-full min-h-[65vh] lg:min-h-[68vh] mx-auto px-4">
+      <div className="bg-white w-full my-4 lg:my-6 mx-auto rounded">
+        <p className="text-neutral-600 py-8 text-center lg:text-xl font-semibold">
+          Welcome to Scan My Meal
         </p>
 
-        <form className="grid gap-4 mt-4 pb-10 px-6" onSubmit={handleSubmit}>
-
-          {/* Name */}
-          <div className="flex items-center rounded-lg overflow-hidden bg-white/20 border border-white/40 shadow-sm focus-within:border-amber-500 transition-all duration-300 backdrop-blur-sm hover:scale-[1.02]">
-            <label className="flex items-center justify-center p-3 bg-amber-500 text-white transition-transform duration-200 hover:scale-110">
-              <FaUserPlus size={22} />
+        <form className="grid gap-3 mt-2 lg:mt-4 pb-10" onSubmit={handleSubmit}>
+          {/* Name Input */}
+          <div className="flex w-[80vw] lg:w-[42vh] mx-auto rounded-md overflow-hidden bg-slate-100">
+            <label
+              className="flex items-center justify-center p-2 bg-green-700 text-amber-50"
+              htmlFor="name"
+            >
+              <FaUserPlus size={25} />
             </label>
             <input
               type="text"
               id="name"
               autoFocus
               spellCheck="false"
-              className="w-full outline-none text-amber-700 font-medium px-3 py-2 bg-transparent placeholder-gray-200"
+              className="w-full outline-none text-green-700 font-semibold px-2"
               placeholder="Enter Your Name"
               name="name"
               value={data.name}
@@ -117,33 +110,39 @@ const Signup = () => {
             />
           </div>
 
-          {/* Email */}
-          <div className="flex items-center rounded-lg overflow-hidden bg-white/20 border border-white/40 shadow-sm focus-within:border-amber-500 transition-all duration-300 backdrop-blur-sm hover:scale-[1.02]">
-            <label className="flex items-center justify-center p-3 bg-amber-500 text-white transition-transform duration-200 hover:scale-110">
-              <FaMobileScreen size={22} />
+          {/* Email Input */}
+          <div className="flex w-[80vw] lg:w-[42vh] mx-auto rounded-md overflow-hidden bg-slate-100">
+            <label
+              className="flex items-center justify-center p-2 bg-green-700 text-amber-50"
+              htmlFor="email"
+            >
+              <FaMobileScreen size={25} />
             </label>
             <input
               type="email"
               id="email"
               spellCheck="false"
-              className="w-full outline-none text-amber-700 font-medium px-3 py-2 bg-transparent placeholder-gray-200"
-              placeholder="Enter Your Email"
+              className="w-full outline-none text-green-700 font-semibold px-2"
+              placeholder="Enter Your Email id"
               name="email"
               value={data.email}
               onChange={handleChange}
             />
           </div>
 
-          {/* Password */}
-          <div className="flex items-center rounded-lg overflow-hidden bg-white/20 border border-white/40 shadow-sm focus-within:border-amber-500 transition-all duration-300 backdrop-blur-sm hover:scale-[1.02]">
-            <label className="flex items-center justify-center p-3 bg-amber-500 text-white transition-transform duration-200 hover:scale-110">
-              <FaUnlockKeyhole size={20} />
+          {/* Password Input */}
+          <div className="flex w-[80vw] lg:w-[42vh] mx-auto rounded-md overflow-hidden bg-slate-100">
+            <label
+              className="flex items-center justify-center p-2 bg-green-700 text-amber-50"
+              htmlFor="password"
+            >
+              <FaUnlockKeyhole size={22} />
             </label>
             <input
-              type={showPass ? "text" : "password"}
+              type={showPass ? "password" : "text"}
               id="password"
               spellCheck="false"
-              className="w-full outline-none text-amber-700 font-medium px-3 py-2 bg-transparent placeholder-gray-200"
+              className="w-full outline-none text-green-700 font-semibold px-2"
               placeholder="Enter Your Password"
               name="password"
               value={data.password}
@@ -151,22 +150,25 @@ const Signup = () => {
             />
             <div
               onClick={() => setshowPass(!showPass)}
-              className="flex items-center justify-center p-3 text-amber-500 hover:text-amber-600 cursor-pointer transition-transform duration-200 hover:scale-110"
+              className="flex items-center justify-center p-2 mr-1 text-green-800 font-semibold"
             >
               {showPass ? <FaRegEyeSlash size={18} /> : <FaRegEye size={18} />}
             </div>
           </div>
 
-          {/* Confirm Password */}
-          <div className="flex items-center rounded-lg overflow-hidden bg-white/20 border border-white/40 shadow-sm focus-within:border-amber-500 transition-all duration-300 backdrop-blur-sm hover:scale-[1.02]">
-            <label className="flex items-center justify-center p-3 bg-amber-500 text-white transition-transform duration-200 hover:scale-110">
-              <FaUnlockKeyhole size={20} />
+          {/* Confirm Password Input */}
+          <div className="flex w-[80vw] lg:w-[42vh] mx-auto rounded-md overflow-hidden bg-slate-100">
+            <label
+              className="flex items-center justify-center p-2 bg-green-700 text-amber-50"
+              htmlFor="confirmPassword"
+            >
+              <FaUnlockKeyhole size={22} />
             </label>
             <input
-              type={showConfirmPass ? "text" : "password"}
+              type={showConfirmPass ? "password" : "text"}
               id="confirmPassword"
               spellCheck="false"
-              className="w-full outline-none text-amber-700 font-medium px-3 py-2 bg-transparent placeholder-gray-200"
+              className="w-full outline-none text-green-700 font-semibold px-2"
               placeholder="Confirm Password"
               name="confirmPassword"
               value={data.confirmPassword}
@@ -174,37 +176,39 @@ const Signup = () => {
             />
             <div
               onClick={() => setshowConfirmPass(!showConfirmPass)}
-              className="flex items-center justify-center p-3 text-amber-500 hover:text-amber-600 cursor-pointer transition-transform duration-200 hover:scale-110"
+              className="flex items-center justify-center p-2 mr-1 text-green-800 font-semibold"
             >
-              {showConfirmPass ? <FaRegEyeSlash size={18} /> : <FaRegEye size={18} />}
+              {showConfirmPass ? (
+                <FaRegEyeSlash size={18} />
+              ) : (
+                <FaRegEye size={18} />
+              )}
             </div>
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <button
             disabled={!validValue || loading}
-            className={`relative overflow-hidden flex items-center justify-center rounded-full py-2 mt-3 lg:mt-4 text-white text-lg tracking-wide shadow-lg transition-all duration-300
-              ${validValue && !loading
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-500 hover:shadow-amber-500/50"
-                : "bg-gray-400 cursor-not-allowed"}`}
+            className={`flex items-center justify-center w-[76vw] lg:w-[40vh] mx-auto rounded-full py-2 mt-3 lg:mt-5 text-amber-50 text-lg tracking-widest 
+            ${
+              validValue && !loading
+                ? "bg-green-700 hover:bg-green-800"
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
-            {validValue && !loading && (
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></span>
-            )}
             {loading ? (
               <>
                 <Loader2 className="animate-spin h-5 w-5 mr-2" /> Processing...
               </>
             ) : (
-              "Sign Up"
+              "SignUp"
             )}
           </button>
         </form>
 
-        {/* Footer */}
-        <p className="text-gray-900 py-4 text-center text-sm border-t border-white/20">
+        <p className="text-neutral-600 pt-4 pb-4 text-center lg:text-lg">
           Already a member?{" "}
-          <Link className="text-amber-500 font-semibold hover:underline" href="/login">
+          <Link className="text-green-700 font-semibold" href={"/login"}>
             Login
           </Link>
         </p>

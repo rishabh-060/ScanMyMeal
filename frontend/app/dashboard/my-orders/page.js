@@ -5,18 +5,8 @@ import Divider from '@/Components/Divider'
 import useMobile from '@/hooks/useMobile'
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { PackageCheckIcon, ChevronsUp, ChevronsDown, CreditCardIcon, MapPinCheck, PhoneIcon, User2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Phone, MapPin, CreditCard, PackageCheck, User } from 'lucide-react'
 import RestrictUser from '@/Components/RestrictUser'
-
-{/* Small Detail Row Component */}
-const DetailRow = ({ icon, label, value }) => (
-  <div className="flex items-start gap-2">
-    <span className="text-amber-600 mt-0.5">{icon}</span>
-    <p className="font-medium text-emerald-700">
-      <span className="text-gray-700 font-semibold">{label}:</span> {value}
-    </p>
-  </div>
-);
 
 const MyOrder = () => {
   const [isMobile] = useMobile()
@@ -40,133 +30,109 @@ const MyOrder = () => {
   return (
     <main className="px-2 lg:px-5 pt-4 lg:pt-8">
       {isMobile && <BacktoHome />}
-
-      {/* Page Title */}
-      <h1 className="text-3xl font-bold text-center text-amber-600 mb-4 lg:mb-8">
-        My Orders
-      </h1>
+      <h1 className="text-3xl font-bold text-center text-emerald-600 mb-2 lg:mb-6">My Orders</h1>
       <Divider />
 
-      {/* Orders Section */}
-      <section className="rounded-xl shadow-inner w-full my-6 p-4 lg:p-6 bg-gradient-to-br from-amber-50 via-white to-amber-50">
+      <section className="bg-amber-400 rounded-xl shadow-md w-full my-6 p-4 lg:p-6">
         {orders.length > 0 ? (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {orders.map((order) => (
-              <div
-                key={order._id}
-                className="bg-white/80 backdrop-blur-md p-5 rounded-xl shadow-md border border-amber-100 hover:shadow-lg transition duration-300"
-              >
-                {/* Top Row */}
+              <div key={order._id} className="bg-white p-4 lg:p-5 rounded-lg shadow flex flex-col gap-3">
                 <div className="flex justify-between items-start">
-                  <div className="space-y-2 w-full">
-                    {/* Order ID */}
+                  <div className="space-y-1 w-full">
                     <div className="flex items-center gap-2">
-                      <PackageCheckIcon size={20} className="text-amber-600" />
-                      <h2 className="text-base font-semibold text-gray-800">
-                        Order ID:
-                        <span className="text-emerald-600 font-bold ml-1">
-                          {order.orderId}
-                        </span>
+                      <PackageCheck size={20} className="text-amber-700" />
+                      <h2 className="text-base font-semibold text-amber-900">
+                        Order ID: <span className='text-emerald-600 font-bold text-lg'>{order.orderId}</span>
                       </h2>
                     </div>
-
-                    {/* Status Badge */}
+                    
                     <div>
-                      <span className="text-sm font-semibold text-gray-700 mr-1">
-                        Status:
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          order.order_status === "pending"
-                            ? "bg-amber-100 text-amber-700"
-                            : order.order_status === "completed"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {order.order_status || "Pending"}
-                      </span>
+                      <p className="text-sm font-semibold text-neutral-700">
+                        Status: <span className={`text-base font-semibold ${order.order_status == 'pending' ? 'text-amber-600' : order.order_status == 'completed' ? 'text-green-600' : 'text-red-600'}`}>{order.order_status || 'Pending'}</span>
+                      </p>
                     </div>
 
-                    {/* Product Row */}
                     <div className="flex items-center gap-5 w-full">
-                      {order.product_details?.image?.[0] && (
-                        <img
-                          src={order.product_details.image[0]}
-                          alt={order.product_details.name}
-                          className="w-16 h-16 object-cover rounded-lg border border-amber-200 shadow-sm"
-                        />
-                      )}
                       <div>
-                        <h4 className="text-amber-800 text-base font-semibold">
-                          {order.product_details?.name}
-                        </h4>
-                        <p className="text-gray-700 text-sm">
-                          Total:{" "}
-                          <span className="font-semibold">
-                            ₹ {order.totalAmt || "N/A"}
-                          </span>
+                        {
+                          order.product_details?.image?.[0] && (
+                            <img
+                              src={order.product_details.image[0]}
+                              alt={order.product_details.name}
+                              className="w-16 h-16 object-cover rounded-md border border-amber-300"
+                            />
+                          )
+                        }
+                      </div>
+
+                      <div>
+                        <h4 className="text-amber-800 text-base font-semibold">{order.product_details?.name}</h4>
+                        <p className="text-amber-800 text-sm">
+                          Total: <span className="font-semibold">₹ {order.totalAmt || 'N/A'}</span>
                         </p>
-                        <p className="text-gray-700 text-sm">
-                          Date:{" "}
-                          <span className="font-semibold">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </span>
+                        <p className="text-amber-800 text-sm">
+                          Date: <span className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</span>
                         </p>
                       </div>
                     </div>
                   </div>
-
-                  {/* Toggle Button */}
                   <button
                     onClick={() => toggleOrder(order._id)}
-                    className="text-amber-600 hover:text-amber-800 transition"
+                    className="text-amber-700 hover:text-amber-900"
                   >
-                    {openOrders.includes(order._id) ? (
-                      <ChevronsUp size={22} />
-                    ) : (
-                      <ChevronsDown size={22} />
-                    )}
+                    {openOrders.includes(order._id) ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
                   </button>
                 </div>
 
-                {/* Expandable Details */}
+                {/* Expandable Section */}
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openOrders.includes(order._id) ? "max-h-96 mt-4" : "max-h-0"
+                    openOrders.includes(order._id) ? 'max-h-96 mt-3' : 'max-h-0'
                   }`}
                 >
-                  <div className="bg-amber-50/50 rounded-lg p-4 border border-dashed border-amber-200 space-y-3 text-sm">
-                    <DetailRow
-                      icon={<CreditCardIcon size={16} />}
-                      label="Payment Status"
-                      value={order.payment_status || "N/A"}
-                    />
-                    <DetailRow
-                      icon={<MapPinCheck size={16} />}
-                      label="Address"
-                      value={`${order.delivery_address?.address_line}, ${order.delivery_address?.city}, ${order.delivery_address?.pincode}`}
-                    />
-                    <DetailRow
-                      icon={<PhoneIcon size={16} />}
-                      label="Contact No"
-                      value={order.delivery_address?.mobile || "N/A"}
-                    />
-                    <DetailRow
-                      icon={<PackageCheckIcon size={16} />}
-                      label="Order No"
-                      value={order.orderId}
-                    />
-                    <DetailRow
-                      icon={<PackageCheckIcon size={16} />}
-                      label="Product ID"
-                      value={order.productId}
-                    />
-                    <DetailRow
-                      icon={<User2 size={16} />}
-                      label="User ID"
-                      value={order.userId}
-                    />
+                  <div className="text-amber-900 space-y-3 text-sm border-t border-dashed border-amber-300 pt-3">
+                    <div className="flex items-center gap-2">
+                      <CreditCard size={16} className="text-amber-700" />
+                      <p className="font-medium text-emerald-600">
+                        <span className="text-amber-700 font-semibold">Payment Status:</span> {order.payment_status || 'N/A'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <MapPin size={16} className="text-amber-700 mt-0.5" />
+                      <p className="font-medium text-emerald-600">
+                        <span className="text-amber-700 font-semibold">Address:</span> {order.delivery_address?.address_line}, {order.delivery_address?.city}, {order.delivery_address?.pincode}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Phone size={16} className="text-amber-700" />
+                      <p className="font-medium text-emerald-600">
+                        <span className="text-amber-700 font-semibold">Contact No:</span> {order.delivery_address?.mobile || 'N/A'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <PackageCheck size={16} className="text-amber-700" />
+                      <p className="font-medium text-emerald-600">
+                        <span className="text-amber-700 font-semibold">Order No:</span> {order.orderId}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <PackageCheck size={16} className="text-amber-700" />
+                      <p className="font-medium text-emerald-600">
+                        <span className="text-amber-700 font-semibold">Product ID:</span> {order.productId}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <User size={16} className="text-amber-700" />
+                      <p className="font-medium text-emerald-600">
+                        <span className="text-amber-700 font-semibold">User ID:</span> {order.userId}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
