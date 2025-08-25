@@ -111,11 +111,11 @@ const Page = () => {
                 ))}
             </div>
             )}
-      </section>
 
-      {
-        openManageOrder && <ManageOrder data={manageOrderData} fetchUpcomingOrders={() => fetchUpcomingOrders()} close={() => setOpenManageOrder(false)} />
-      }
+            {
+              openManageOrder && <ManageOrder data={manageOrderData} fetchUpcomingOrders={() => fetchUpcomingOrders()} close={() => setOpenManageOrder(false)} />
+            }
+      </section>
     </main>
   )
 }
