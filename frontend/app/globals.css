@@ -4,7 +4,8 @@
 
 body {
   @apply min-h-screen font-sans transition-colors duration-300 ease-in-out 
-         bg-gradient-to-br from-amber-50 via-white to-amber-100
+         bg-gradient-to-br from-amber-50 via-white to-amber-100 
+         dark:from-gray-900 dark:via-gray-950 dark:to-gray-900;
 }
 
 .no-scrollbar::-webkit-scrollbar {
