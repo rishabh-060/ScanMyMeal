@@ -62,10 +62,6 @@ const Footer = () => {
             <Link href='mailto:verma.rishabh924@gmail.com' className='text-amber-500 hover:underline'>
               verma.rishabh924@gmail.com
             </Link>
-            <span className='text-lg font-bold'> & </span>
-            <Link href='mailto:diwakardwivedi624@gmail.com' className='text-amber-500 hover:underline'>
-              diwakardwivedi624@gmail.com
-            </Link>
           </p>
         </div>
       </div>
@@ -82,11 +78,13 @@ const Footer = () => {
             @rishabh_verma
           </Link>
           <span className='text-lg font-bold'> & </span>
-          <span
+          <Link
+            href='https://vip-8896.netlify.app'
+            target='_blank'
             className='text-amber-500 hover:underline font-medium'
           >
-            @diwakar_dwivedi
-          </span>
+            @vipin_kumar
+          </Link>
         </p>
       </div>
     </footer>
