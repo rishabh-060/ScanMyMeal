@@ -67,6 +67,7 @@ const Signup = () => {
 
       if (response.data.error) {
         toast.error(response.data.message);
+        return;
       }
 
       if (response.data.success) {

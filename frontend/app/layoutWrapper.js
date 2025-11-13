@@ -27,7 +27,8 @@ export default function LayoutWrapper({ children }) {
         <PersistGate loading={null} persistor={persistor}>
           <GlobalProvider>
             <ToastContainer
-              position="top-center"
+              position="top-right"
+              limit={1}
               autoClose={4000}
               newestOnTop
               closeOnClick
@@ -37,7 +38,7 @@ export default function LayoutWrapper({ children }) {
               hideProgressBar={false}
               theme="colored"
               toastClassName={() =>
-                "relative flex items-start gap-3 bg-gray-900 text-yellow-300 rounded-xl shadow-lg px-6 py-4 mb-4 w-full max-w-md mx-auto animate-toast-in"
+                "relative flex items-start gap-3 bg-gray-900 text-yellow-300 rounded-xl shadow-lg px-6 py-4 mb-4 w-full max-w-md mx-auto"
               }
               bodyClassName="text-sm font-medium leading-snug"
               progressClassName="bg-yellow-400 h-1 rounded-b-xl"
