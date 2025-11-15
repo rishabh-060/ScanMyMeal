@@ -64,7 +64,7 @@ const Login = () => {
       })
 
       if(response.data.error){
-        if(response?.status) {
+        if(response?.status === 403) {
           setVerificationMailId(response?.data?.email);
           setShowMailVerificationNotification(true);
         }
@@ -103,6 +103,10 @@ const Login = () => {
 
   const requestForVerificationMail = async () => {
     try {
+      if(!verificationMailId) {
+        toast.error('Something wrong with the mail id! Try Again');
+        return;
+      }
       setRequesting(true);
       const response = await Axios({
         ...summaryApi.resendVerificationMail,
@@ -110,6 +114,9 @@ const Login = () => {
           email: verificationMailId
         }
       })
+      if(response?.data?.success) {
+        toast.success('Verification mail send to your registered mail id');
+      }
     } catch (error) {
       toast.error(error?.response?.data?.message)
     } finally {
@@ -130,7 +137,13 @@ const Login = () => {
                 <h2 className='text-lg font-semibold text-neutral-700'>Email Verification Required</h2>
               </div>
 
-              <button onClick={() => setShowMailVerificationNotification(false)} className='text-neutral-400 hover:text-neutral-700'>
+              <button
+                onClick={() => {
+                  setShowMailVerificationNotification(false);
+                  setVerificationMailId('');
+                }}
+                className='text-neutral-400 hover:text-neutral-700'
+              >
                 <IoCloseCircle size={26} />
               </button>
             </div>

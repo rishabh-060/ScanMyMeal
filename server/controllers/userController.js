@@ -563,7 +563,7 @@ const resendVerificationMail = async (req, res) => {
             })
         }
 
-        const url = `https://scanmymeal.netlify.app/verify-email?code=${user?._id}` 
+        const url = `https://scanmymeal.netlify.app/verify-email?code=${user?.email}` 
 
         await sendMail(
             user.email,
