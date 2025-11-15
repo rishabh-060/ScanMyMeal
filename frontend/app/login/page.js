@@ -91,7 +91,7 @@ const Login = () => {
         changePath('/')
       }
     } catch (error) {
-      if(error?.response?.status) {
+      if(error?.response?.status === 403) {
         setVerificationMailId(error?.response?.data?.email);
         setShowMailVerificationNotification(true);
       }
