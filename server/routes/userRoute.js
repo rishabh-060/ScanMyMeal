@@ -1,5 +1,5 @@
 const { Router } = require('express')
-const { registerUserController, loginController, verifyEmail, logoutController, updateUserDetails, forgetPasswordController, verifyForgotPasswordOTP, resetPassword, refreshTokenController, userDetails, uploadAvatar } = require('../controllers/userController')
+const { registerUserController, loginController, verifyEmail, logoutController, updateUserDetails, forgetPasswordController, verifyForgotPasswordOTP, resetPassword, refreshTokenController, userDetails, uploadAvatar, resendVerificationMail } = require('../controllers/userController')
 const auth = require('../middlewares/auth')
 const upload = require('../middlewares/multer')
 
@@ -17,6 +17,7 @@ userRouter.put('/verify-forgot-password-otp', verifyForgotPasswordOTP)
 userRouter.put('/reset-password', resetPassword)
 userRouter.post('/refresh-token', refreshTokenController)
 userRouter.get('/user-details', auth, userDetails)
+userRouter.post('/send-verification-mail', resendVerificationMail);
 
 
 module.exports = userRouter

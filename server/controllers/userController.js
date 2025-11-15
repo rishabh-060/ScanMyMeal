@@ -40,7 +40,7 @@ const registerUserController = async (req, res) => {
         const newUser = await userModel({...req.body, password : hashedpass})
         const save = await newUser.save()
 
-        const url = `${process.env.FRONTEND_URL}/verify-email?code=${save?._id}` 
+        const url = `https://scanmymeal.netlify.app/verify-email?code=${save?._id}` 
 
         const isSend = await sendMail(
             email,
@@ -76,7 +76,7 @@ const registerUserController = async (req, res) => {
 // Mail verification controller
 const verifyEmail = async (req, res) => {
     try {
-        const { code } = req.body
+        const { code } = req.query;
 
         const user = await userModel.findOne({_id : code})
 
@@ -129,14 +129,6 @@ const loginController = async (req, res) => {
             })
         }
 
-        if(user.status == "Inactive" || user.status == "Suspended") {
-            return res.status(400).json({
-                message : `Account ${user.status}! Can't login`,
-                error : true,
-                success : false
-            })
-        }
-
         const verifyPass = await bcryptjs.compare(password, user.password)
 
         if(!verifyPass) {
@@ -144,6 +136,23 @@ const loginController = async (req, res) => {
                 message : `Wrong Password Entered`,
                 error : true,
                 success : false
+            })
+        }
+        
+        if(user.status == "Inactive" || user.status == "Suspended") {
+            return res.status(400).json({
+                message : `Account ${user.status}! Can't login`,
+                error : true,
+                success : false
+            })
+        }
+        
+        if(!user?.verify_email) {
+            return res.status(403).json({
+                message : `Email not verified! Can't login`,
+                error : true,
+                success : false,
+                email : user.email
             })
         }
 
@@ -531,5 +540,50 @@ const userDetails = async (req, res) => {
     }
 }
 
+// resend verification Mail
+const resendVerificationMail = async (req, res) => {
+    try {
+        const { email } = req.body;
+    
+        if(!email) {
+            return res.status(400).json({
+                message : "Something went wrong! try again with login",
+                error : true,
+                success : false
+            })
+        }
 
-module.exports = { registerUserController, loginController, verifyEmail, logoutController, uploadAvatar, updateUserDetails, forgetPasswordController, verifyForgotPasswordOTP, resetPassword, refreshTokenController, userDetails }
+        const user = await userModel.findOne({ email });
+
+        if(!user._id) {
+            return res.status(400).json({
+                message : "Something went wrong! try again with login",
+                error : true,
+                success : false
+            })
+        }
+
+        const url = `https://scanmymeal.netlify.app/verify-email?code=${user?._id}` 
+
+        await sendMail(
+            user.email,
+            'Welcome to Scan My Meal',
+            'Mail Verification | Scan My Meal',
+            verifyEmailTemplate( user.name, url)
+        )
+
+        return res.status(200).json({
+            message : "Verification mail sent successfully",
+            error : false,
+            success : true
+        })
+    } catch (error) {
+        res.status(500).json({
+            message : error.message || error,
+            error : true,
+            success : false
+        })
+    }
+}
+
+module.exports = { registerUserController, loginController, verifyEmail, logoutController, uploadAvatar, updateUserDetails, forgetPasswordController, verifyForgotPasswordOTP, resetPassword, refreshTokenController, userDetails, resendVerificationMail }

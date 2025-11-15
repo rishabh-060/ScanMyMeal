@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import summaryApi from '@/public/common/summaryApi';
 import { Loader2 } from "lucide-react";
 import useChangePath from '@/hooks/changePath';
+import { useRouter } from 'next/router';
 
 
 // export const metadata = {
@@ -32,6 +33,7 @@ const forgotPassword = () => {
   }
   
   const changePath = useChangePath()
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false); // Add loading state
 
@@ -54,7 +56,7 @@ const forgotPassword = () => {
       if(response.data.success){
         toast.success(response.data.message)
 
-        changePath('/otp-verification', data.email)
+        router.push('/otp-verification', data.email)
 
         setdata({
           email: ""

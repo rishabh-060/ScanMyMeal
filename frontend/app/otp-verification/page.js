@@ -78,10 +78,10 @@ const OtpVerification = () => {
       });
 
       if (response.data.success) {
-        toast.success(response.data.message);
         const success = response.data.success
-        setData(["", "", "", "", "", ""]);
         router.push(`/reset-password?email=${encodeURIComponent(email)}&status=${encodeURIComponent(success)}`);
+        toast.success(response.data.message);
+        setData(["", "", "", "", "", ""]);
       } else {
         toast.error(response.data.message);
       }

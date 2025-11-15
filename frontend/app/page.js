@@ -19,6 +19,23 @@ const page = () => {
     
     if(userData?.data?._id) {
       dispatch(setUserDetails(userData?.data));
+    } else {
+      dispatch(setUserDetails({
+        id : "",
+        name : "",
+        email : "",
+        avatar : "",
+        mobile : "",
+        verify_email : "",
+        last_login_date : "",
+        status : "",
+        address_details : [],
+        shopping_cart : [],
+        order_history : [],
+        role : "",
+        createdAt : "",
+        updatedAt : ""
+      }))
     }
   };
 
