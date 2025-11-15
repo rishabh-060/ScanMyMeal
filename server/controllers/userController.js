@@ -49,21 +49,21 @@ const registerUserController = async (req, res) => {
             verifyEmailTemplate( name, url)
         )
 
-        if(isSend.success){
+        // if(isSend.success){
             return res.status(200).json({
                 message : "Verification mail sent successfully",
                 error : false,
                 success : true,
                 data : save
             })
-        }else{
-            await userModel.findByIdAndDelete(save?._id)
-            return res.status(400).json({
-                message : "Something went wrong ! Try again",
-                error : true,
-                success : false
-            })
-        }
+        // }else{
+        //     await userModel.findByIdAndDelete(save?._id)
+        //     return res.status(400).json({
+        //         message : "Something went wrong ! Try again",
+        //         error : true,
+        //         success : false
+        //     })
+        // }
     } catch (error) {
         return res.status(500).json({
             message : error.message || error,

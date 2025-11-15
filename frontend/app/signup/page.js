@@ -71,9 +71,9 @@ const Signup = () => {
       }
 
       if (response.data.success) {
+        changePath("/login");
         toast.success(response.data.message);
         setdata({ name: "", email: "", password: "", confirmPassword: "" });
-        changePath("/login");
       }
     } catch (error) {
       toast.error(error?.response?.data?.message);
