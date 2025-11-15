@@ -1,3 +1,5 @@
+const logo = require('../public/assets/favicon.png');
+
 const sentOtpTemplate = (name, otp) => {
     return `
     <!DOCTYPE html>
@@ -73,7 +75,7 @@ const sentOtpTemplate = (name, otp) => {
     <body>
         <div class="container">
             <div class="header">
-                <img src="https://your-logo-url.com/logo.png" alt="Scan My Meal">
+                <img src="${logo}" alt="Scan My Meal">
                 <h2>Password Reset Request</h2>
             </div>
             <div class="content">

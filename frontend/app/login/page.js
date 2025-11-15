@@ -110,8 +110,6 @@ const Login = () => {
           email: verificationMailId
         }
       })
-
-      console.log('res 2', response)
     } catch (error) {
       toast.error(error?.response?.data?.message)
     } finally {

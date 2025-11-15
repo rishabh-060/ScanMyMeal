@@ -1,3 +1,5 @@
+const logo = require('../public/assets/favicon.png');
+
 const accountSuspension = (userName, suspensionDate, reason) => {
     return `
     <!DOCTYPE html>
@@ -76,7 +78,7 @@ const accountSuspension = (userName, suspensionDate, reason) => {
     <body>
         <div class="container">
             <div class="header">
-                <img src="https://your-logo-url.com/logo.png" alt="Scan My Meal" />
+                <img src="${logo}" alt="Scan My Meal" />
                 <h2>Account Suspension Notice</h2>
             </div>
             <div class="content">

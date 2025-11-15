@@ -1,3 +1,5 @@
+const logo = require('../public/assets/favicon.png');
+
 const verifyEmailTemplate = (name, url) => {
     return `
     <!DOCTYPE html>
@@ -86,7 +88,7 @@ const verifyEmailTemplate = (name, url) => {
     <body>
         <div class="container">
             <div class="header">
-                <img src="https://your-logo-url.com/logo.png" alt="Scan My Meal">
+                <img src="${logo}" alt="Scan My Meal">
                 <h2>Welcome to Scan My Meal</h2>
             </div>
             <div class="content">
