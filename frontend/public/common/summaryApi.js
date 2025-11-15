@@ -1,11 +1,13 @@
-import ManageOrder from "@/Components/ManageOrder"
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 export const baseUrl = API_URL
 
 const summaryApi =  {
     signup : {
         url : '/api/user/register',
+        method : 'post'
+    },
+    verifyEmail : {
+        url : '/api/user/verify-email',
         method : 'post'
     },
     login : {

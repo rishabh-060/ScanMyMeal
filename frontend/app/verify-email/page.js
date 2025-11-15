@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import Axios from '@/public/utils/Axios';
+import summaryApi from '@/public/common/summaryApi';
 
 const VerifyEmail = () => {
   const searchParams = useSearchParams();
@@ -21,9 +23,12 @@ const VerifyEmail = () => {
     }
 
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/user/verify-email?code=${token}`
-      );
+      const res = await Axios({
+        ...summaryApi.verifyEmail,
+        data: {
+          code: token
+        }
+      });
 
       if (res.data.success) {
         setStatus('success');
@@ -33,9 +38,8 @@ const VerifyEmail = () => {
         // toast.error(res.data.message || 'Verification failed');
       }
     } catch (err) {
-      console.error(err);
       setStatus('error');
-      toast.error('Something went wrong during verification');
+      // toast.error('Something went wrong during verification');
     }
   };
 

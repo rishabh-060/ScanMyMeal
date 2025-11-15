@@ -76,7 +76,7 @@ const registerUserController = async (req, res) => {
 // Mail verification controller
 const verifyEmail = async (req, res) => {
     try {
-        const { code } = req.query;
+        const { code } = req.body;
 
         const user = await userModel.findOne({_id : code})
 
@@ -563,7 +563,7 @@ const resendVerificationMail = async (req, res) => {
             })
         }
 
-        const url = `https://scanmymeal.netlify.app/verify-email?code=${user?.email}` 
+        const url = `https://scanmymeal.netlify.app/verify-email?code=${user?._id}` 
 
         await sendMail(
             user.email,

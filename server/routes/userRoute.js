@@ -19,5 +19,4 @@ userRouter.post('/refresh-token', refreshTokenController)
 userRouter.get('/user-details', auth, userDetails)
 userRouter.post('/send-verification-mail', resendVerificationMail);
 
-
 module.exports = userRouter
