@@ -1,4 +1,4 @@
-const logo = require('../public/assets/favicon.png');
+const logo = `https://scanmymeal-1.onrender.com/favicon.png`;
 
 const accountSuspension = (userName, suspensionDate, reason) => {
     return `
