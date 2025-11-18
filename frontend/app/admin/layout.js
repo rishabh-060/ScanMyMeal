@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React from 'react'
 import { useSelector } from 'react-redux'
-import { LayoutDashboard, Layers3, ListOrdered, PlusCircle, Users, ShoppingBag, Calendar } from 'lucide-react'
+import { LayoutDashboard, Layers3, ListOrdered, PlusCircle, Users, ShoppingBag, Calendar, QrCode } from 'lucide-react'
 
 const page = ({ children }) => {
   const user = useSelector((state) => state.user)
@@ -18,6 +18,7 @@ const page = ({ children }) => {
 
   const links = [
     { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard size={16} /> },
+    { label: 'Generate QR Code', href: '/admin/generate-qr', icon: <QrCode size={16} /> },
     { label: 'Category', href: '/admin/category', icon: <Layers3 size={16} /> },
     { label: 'Sub Category', href: '/admin/sub-category', icon: <ListOrdered size={16} /> },
     { label: 'Add Menu', href: '/admin/add-product', icon: <PlusCircle size={16} /> },

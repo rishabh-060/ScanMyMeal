@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { loadStripe } from '@stripe/stripe-js'
 import { useSearchParams } from 'next/navigation'
+import QrPopup from '@/Components/QrPopup'
 
 const Page = () => {
   const address = useSelector(state => state?.addresses?.addressList)
@@ -21,6 +22,7 @@ const Page = () => {
   const [SelectedAddress, setSelectedAddress] = useState(null)
   const [activeTab, setActiveTab] = useState('delivery')
   const [loading, setLoading] = useState(false)
+  const [openQR, setOpenQR] = useState(false)
   const dispatch = useDispatch();
   const params = useSearchParams()
   const tableNo = params.get('tableId') || '';
@@ -206,12 +208,43 @@ const Page = () => {
               </div>
             )}
 
-            {activeTab === 'table' && (
-              <div className="bg-amber-100 p-4 rounded-md border border-amber-600 border-dashed text-center">
-                <p className="text-sm font-medium text-neutral-700">
-                  Selected Table No:
-                  <span className={`${tableId? 'text-amber-700 text-xl' : 'text-neutral-700'} font-bold ml-2 min-w-44 w-44 max-w-44 text-center py-1 px-6 rounded-lg border-2 border-amber-700 `}>{tableId ? tableId : 'Scan QR'}</span>
+            {activeTab === "table" && (
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-5 rounded-xl border border-amber-600/40 shadow-sm space-y-4 transition-all duration-300">
+
+                {/* Header */}
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-base font-semibold text-neutral-700">
+                    Selected Table
+                  </p>
+
+                  {/* Table Number Display */}
+                  <div
+                    className={`min-w-40 px-6 py-2 rounded-xl border-2 font-bold text-lg tracking-wide 
+                      ${tableId
+                        ? "border-amber-700 text-amber-700 bg-white shadow-md"
+                        : "border-neutral-400 text-neutral-500 bg-neutral-100"
+                      }`}
+                  >
+                    {tableId ? `Table SMM-${tableId}` : "Not Selected"}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="w-full h-px bg-amber-600/30"></div>
+
+                {/* Action Button */}
+                <button
+                  onClick={() => setOpenQR(true)}
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 rounded-xl shadow-md transition-all duration-200 active:scale-[0.97]"
+                >
+                  {tableId ? "Re-Scan QR Code" : "Scan QR to Select Table"}
+                </button>
+
+                {/* Helper Text */}
+                <p className="text-xs text-neutral-600 text-center">
+                  Point your camera at the table QR to auto-select your table.
                 </p>
+
               </div>
             )}
           </div>
@@ -269,6 +302,10 @@ const Page = () => {
       </div>
       {
         openAddress && <AddAddress close={() => setOpenAddress(false)}/>
+      }
+      
+      {
+        openQR && <QrPopup onClose={() => setOpenQR(false)} />
       }
     </section>
   )

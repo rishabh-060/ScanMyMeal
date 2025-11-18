@@ -42,7 +42,8 @@ const registerUserController = async (req, res) => {
 
         const url = `https://scanmymeal.netlify.app/verify-email?code=${save?._id}` 
 
-        const isSend = await sendMail(
+        // const isSend = await sendMail(
+        sendMail(
             email,
             'Welcome to Scan My Meal',
             'Mail Verification | Scan My Meal',

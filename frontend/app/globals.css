@@ -46,3 +46,30 @@ body{
     animation: toast-in 0.4s ease-in both;
   }
 }
+
+@keyframes scanLine {
+  0% { top: 0; }
+  100% { top: calc(100% - 4px); }
+}
+
+.animate-scanLine {
+  animation: scanLine 1.6s infinite alternate linear;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(25px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in;
+}
