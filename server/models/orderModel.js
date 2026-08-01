@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 const {
   ORDER_TYPES,
   ORDER_STATUSES,
@@ -104,5 +105,6 @@ orderSchema.index({ restaurant: 1, createdAt: -1 })
 orderSchema.index({ restaurant: 1, status: 1, createdAt: -1 })
 orderSchema.index({ table: 1, createdAt: -1 })
 orderSchema.index({ 'payment.providerOrderId': 1 }, { sparse: true })
+orderSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('order', orderSchema)

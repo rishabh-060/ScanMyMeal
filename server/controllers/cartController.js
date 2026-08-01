@@ -16,10 +16,13 @@ const addToCartController = asyncHandler(async (req, res) => {
     await cache.removeByPattern('menu:*')
     throw new AppError('Product is unavailable', 409, 'PRODUCT_UNAVAILABLE')
   }
-  if (await cartModel.exists({ userId: req.userId, product: product._id })) {
+  const existingCartItem = await cartModel.findOne({ userId: req.userId, product: product._id }).withDeleted()
+  if (existingCartItem && existingCartItem.isDeleted !== true) {
     throw new AppError('Product is already in the cart', 409, 'CART_ITEM_EXISTS')
   }
-  const cartItem = await cartModel.create({ quantity: 1, userId: req.userId, product: product._id })
+  const cartItem = existingCartItem
+    ? await cartModel.restoreOne({ _id: existingCartItem._id }, { set: { quantity: 1 } })
+    : await cartModel.create({ quantity: 1, userId: req.userId, product: product._id })
   await userModel.updateOne({ _id: req.userId }, { $addToSet: { shopping_cart: cartItem._id } })
   return res.status(201).json({ success: true, error: false, message: 'Item added successfully', data: cartItem })
 })
@@ -43,7 +46,10 @@ const updateCartItemQtyController = asyncHandler(async (req, res) => {
 })
 
 const removeFromCartController = asyncHandler(async (req, res) => {
-  const cartItem = await cartModel.findOneAndDelete({ _id: req.body._id, userId: req.userId })
+  const cartItem = await cartModel.softDeleteOne(
+    { _id: req.body._id, userId: req.userId },
+    { deletedBy: req.userId },
+  )
   if (!cartItem) throw new AppError('Cart item not found', 404, 'CART_ITEM_NOT_FOUND')
   await userModel.updateOne({ _id: req.userId }, { $pull: { shopping_cart: cartItem._id } })
   return res.json({ success: true, error: false, message: 'Item removed successfully' })

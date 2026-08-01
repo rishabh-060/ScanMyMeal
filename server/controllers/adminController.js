@@ -6,15 +6,17 @@ const notificationModel = require('../models/notificationModel')
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
 const { transitionOrder } = require('../services/orderService')
+const { getOrderReport, getReportRange, getTopCustomers } = require('../services/reportService')
 const sendMail = require('../helpers/tryMailer')
 const accountSuspention = require('../templates/accountSuspention')
 const { Stripe } = require('../config/stripe')
 const { PAYMENT_STATUSES } = require('../constants/order')
 
 const getDashboardSummaryController = asyncHandler(async (req, res) => {
-  const restaurant = { restaurant: { $in: ['default', null] } }
+  const restaurant = { restaurant: { $in: [process.env.DEFAULT_RESTAURANT_ID || 'default', null] } }
   const now = new Date()
-  const [customers, products, orders, activeOffers, unreadNotifications, lowStock, revenue] = await Promise.all([
+  const todayRange = getReportRange({ period: 'day', from: req.query.from, to: req.query.to })
+  const [customers, products, orders, activeOffers, unreadNotifications, lowStock, revenue, todayReport, topCustomers] = await Promise.all([
     userModel.countDocuments({ role: 'USER' }),
     productModel.countDocuments(),
     orderModel.countDocuments(restaurant),
@@ -22,27 +24,70 @@ const getDashboardSummaryController = asyncHandler(async (req, res) => {
     notificationModel.countDocuments({ audience: { $in: ['STAFF', 'ALL'] }, readBy: { $ne: req.userId }, $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }] }),
     productModel.find({ stock: { $lte: 5 }, publish: true }).select('name image stock isAvailable').sort({ stock: 1 }).limit(5).lean(),
     orderModel.aggregate([{ $match: restaurant }, { $group: { _id: null, total: { $sum: '$pricing.grandTotal' } } }]),
+    getOrderReport({ period: 'day', from: todayRange.from, to: todayRange.to, timezone: req.query.timezone }),
+    getTopCustomers({ from: todayRange.from, to: todayRange.to, limit: 5 }),
   ])
-  return res.json({ success: true, error: false, data: { customers, products, orders, activeOffers, unreadNotifications, lowStock, revenue: revenue[0]?.total || 0 } })
+  return res.json({
+    success: true,
+    error: false,
+    data: {
+      customers,
+      products,
+      orders,
+      activeOffers,
+      unreadNotifications,
+      lowStock,
+      revenue: revenue[0]?.total || 0,
+      todayRevenue: todayReport.summary.revenue,
+      todayOrders: todayReport.summary.orderCount,
+      todayItemsSold: todayReport.summary.itemsSold,
+      todayAverageOrder: todayReport.summary.averageOrderValue,
+      topProducts: todayReport.topProducts.slice(0, 5),
+      topCustomers,
+      todayRange: todayReport.range,
+    },
+  })
 })
 
 const getAllOrdersController = asyncHandler(async (req, res) => {
   const page = Math.max(1, Number.parseInt(req.query.page || '1', 10))
   const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit || '25', 10)))
-  const query = { restaurant: { $in: ['default', null] } }
-  if (req.query.status) query.status = String(req.query.status).toUpperCase()
-  if (req.query.paymentStatus) query['payment.status'] = String(req.query.paymentStatus).toUpperCase()
-  if (req.query.orderType) query.orderType = String(req.query.orderType).toUpperCase()
-  if (req.query.table) query.table = req.query.table
-  if (req.query.search) query.$or = [
+  const filters = [{ restaurant: { $in: [process.env.DEFAULT_RESTAURANT_ID || 'default', null] } }]
+  const status = String(req.query.status || '').toUpperCase()
+  if (status === 'LIVE') filters.push({ status: { $nin: ['COMPLETED', 'CANCELLED'] } })
+  else if (status) filters.push({ status })
+  if (req.query.paymentStatus) filters.push({ 'payment.status': String(req.query.paymentStatus).toUpperCase() })
+  if (req.query.orderType) filters.push({ orderType: String(req.query.orderType).toUpperCase() })
+  if (req.query.table) filters.push({ table: req.query.table })
+  if (req.query.search) filters.push({ $or: [
     { publicOrderId: { $regex: String(req.query.search), $options: 'i' } },
     { orderId: { $regex: String(req.query.search), $options: 'i' } },
-  ]
-  if (req.query.from || req.query.to) {
-    query.createdAt = {}
-    if (req.query.from) query.createdAt.$gte = new Date(req.query.from)
-    if (req.query.to) query.createdAt.$lte = new Date(req.query.to)
+    { 'deliveryAddress.phone': { $regex: String(req.query.search), $options: 'i' } },
+  ] })
+
+  const requestedWindow = String(req.query.window || '24h').toLowerCase()
+  const from = req.query.from ? new Date(req.query.from) : null
+  const to = req.query.to ? new Date(req.query.to) : null
+  if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime()))) {
+    throw new AppError('Invalid order date range', 400, 'INVALID_DATE_RANGE')
   }
+  if (from || to) {
+    const createdAt = {}
+    if (from) createdAt.$gte = from
+    if (to) createdAt.$lt = to
+    filters.push({ createdAt })
+  } else if (requestedWindow !== 'all') {
+    const now = new Date()
+    if (requestedWindow === 'today') {
+      const start = new Date(now)
+      start.setHours(0, 0, 0, 0)
+      filters.push({ createdAt: { $gte: start, $lte: now } })
+    } else {
+      const hours = requestedWindow === '12h' ? 12 : 24
+      filters.push({ createdAt: { $gte: new Date(now.getTime() - hours * 60 * 60 * 1000), $lte: now } })
+    }
+  }
+  const query = filters.length === 1 ? filters[0] : { $and: filters }
   const [orders, total] = await Promise.all([
     orderModel.find(query)
       .populate('userId', 'name email mobile')
@@ -60,7 +105,19 @@ const getAllOrdersController = asyncHandler(async (req, res) => {
     message: orders.length ? 'Orders fetched successfully' : 'No orders found',
     data: orders,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    filters: { window: requestedWindow, status: status || 'ALL' },
   })
+})
+
+const getOrderReportController = asyncHandler(async (req, res) => {
+  const report = await getOrderReport({
+    period: req.query.period,
+    from: req.query.from,
+    to: req.query.to,
+    reference: req.query.reference,
+    timezone: req.query.timezone,
+  })
+  return res.json({ success: true, error: false, message: 'Order report generated', data: report })
 })
 
 const getAllUsersController = asyncHandler(async (req, res) => {
@@ -160,6 +217,7 @@ const refundOrderController = asyncHandler(async (req, res) => {
 module.exports = {
   getDashboardSummaryController,
   getAllOrdersController,
+  getOrderReportController,
   getAllUsersController,
   convertToAdminController,
   convertToUserController,

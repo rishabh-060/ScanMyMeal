@@ -190,6 +190,10 @@ const summaryApi =  {
         url : '/api/admin/upcoming-orders',
         method : 'get'
     },
+    adminOrderReports : {
+        url : '/api/admin/order-reports',
+        method : 'get'
+    },
     getAllUsers : {
         url : '/api/admin/get-all-users',
         method : 'get'

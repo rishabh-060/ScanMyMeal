@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 
 const offerSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 100 },
@@ -17,5 +18,6 @@ const offerSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 offerSchema.index({ isActive: 1, startAt: 1, endAt: 1 })
+offerSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('offer', offerSchema)

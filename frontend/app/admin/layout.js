@@ -4,13 +4,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSelector } from 'react-redux'
-import { ArrowLeft, BadgePercent, Bell, Boxes, CalendarClock, Images, LayoutDashboard, Layers3, ListTree, PlusCircle, QrCode, ShieldCheck, ShoppingBag, Users } from 'lucide-react'
+import { ArrowLeft, BadgePercent, BarChart3, Bell, Boxes, CalendarClock, Images, LayoutDashboard, Layers3, ListTree, PlusCircle, QrCode, ShieldCheck, ShoppingBag, Users } from 'lucide-react'
 import RestrictUser from '@/Components/RestrictUser'
 import { hasPermission, isStaff } from '@/public/utils/isAdmin'
 
 const links = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, permission: 'dashboard.view', group: 'Workspace' },
   { label: 'Orders', href: '/admin/upcoming-orders', icon: CalendarClock, permission: 'orders.view', group: 'Workspace' },
+  { label: 'Reports', href: '/admin/reports', icon: BarChart3, permission: 'orders.view', group: 'Workspace' },
   { label: 'Notifications', href: '/admin/notifications', icon: Bell, permission: 'notifications.view', group: 'Workspace' },
   { label: 'Menu items', href: '/admin/products', icon: ShoppingBag, permission: 'products.view', group: 'Catalog' },
   { label: 'Add item', href: '/admin/add-product', icon: PlusCircle, permission: 'products.manage', group: 'Catalog' },

@@ -18,12 +18,24 @@ const links = [
   { label: 'Profile settings', href: '/dashboard/profile', icon: Settings },
 ]
 
-const UserMenu = ({ close, compact = false }) => {
+const UserMenu = ({ close, compact = false, mobileNav = false }) => {
   const user = useSelector((state) => state.user)
   const dispatch = useDispatch()
   const pathname = usePathname()
   const changePath = useChangePath()
   const admin = isAdmin(user.role)
+
+  if (mobileNav) {
+    return (
+      <nav className="flex min-w-max gap-1.5" aria-label="Account navigation">
+        {links.map(({ label, href, icon: Icon }) => {
+          const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href)
+          return <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 text-sm font-bold ${active ? 'bg-[#19221d] text-white shadow-md' : 'text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-text)]'}`}><Icon size={17} />{label === 'Profile settings' ? 'Profile' : label}</Link>
+        })}
+        {admin && <Link href="/admin" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 text-sm font-bold text-[var(--color-secondary)] hover:bg-emerald-50"><ShieldCheck size={17} />Admin</Link>}
+      </nav>
+    )
+  }
 
   const handleLogout = async () => {
     try { await Axios(summaryApi.logout); dispatch(logout()); close?.(); changePath('/'); toast.success('Signed out') }

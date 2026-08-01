@@ -86,12 +86,13 @@ const updateBannerController = asyncHandler(async (req, res) => {
 })
 
 const deleteBannerController = asyncHandler(async (req, res) => {
-  const banner = await bannerModel.findByIdAndDelete(req.params.id)
+  const banner = await bannerModel.softDeleteOne(
+    { _id: req.params.id },
+    { deletedBy: req.userId },
+  )
   if (!banner) throw new AppError('Banner not found', 404, 'BANNER_NOT_FOUND')
   await cache.remove(CACHE_KEY)
-  const publicIds = [banner.desktopMediaPublicId, banner.mobileMediaPublicId].filter(Boolean)
-  await Promise.allSettled(publicIds.map((publicId) => destroyBannerMedia(publicId, banner.mediaType)))
-  logger.info('banner_deleted', { bannerId: banner._id, adminId: req.userId })
+  logger.info('banner_soft_deleted', { bannerId: banner._id, adminId: req.userId })
   return res.json({ success: true, error: false, message: 'Banner deleted' })
 })
 

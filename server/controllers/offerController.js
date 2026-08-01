@@ -32,8 +32,14 @@ const listOffersController = asyncHandler(async (_req, res) => {
 const createOfferController = asyncHandler(async (req, res) => {
   const data = payload(req.body)
   validatePayload(data)
-  const offer = await offerModel.create({ ...data, createdBy: req.userId })
-  return res.status(201).json({ success: true, error: false, message: 'Offer created', data: offer })
+  const deletedOffer = await offerModel.findOne({ code: data.code, isDeleted: true }).withDeleted()
+  const offer = deletedOffer
+    ? await offerModel.restoreOne(
+      { _id: deletedOffer._id },
+      { set: { ...data, createdBy: req.userId } },
+    )
+    : await offerModel.create({ ...data, createdBy: req.userId })
+  return res.status(201).json({ success: true, error: false, message: deletedOffer ? 'Offer restored' : 'Offer created', data: offer })
 })
 
 const updateOfferController = asyncHandler(async (req, res) => {
@@ -51,7 +57,10 @@ const setOfferStatusController = asyncHandler(async (req, res) => {
 })
 
 const deleteOfferController = asyncHandler(async (req, res) => {
-  const offer = await offerModel.findByIdAndDelete(req.params.id)
+  const offer = await offerModel.softDeleteOne(
+    { _id: req.params.id },
+    { deletedBy: req.userId },
+  )
   if (!offer) throw new AppError('Offer not found', 404, 'OFFER_NOT_FOUND')
   return res.json({ success: true, error: false, message: 'Offer deleted' })
 })

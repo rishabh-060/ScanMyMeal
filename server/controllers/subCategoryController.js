@@ -118,7 +118,17 @@ const editSubCategoryController = async (req, res) => {
 const deleteSubCategoryController = async (req, res) => {
     try {
         const { _id } = req.body
-        const checkSubCat = await subCategoryModel.findByIdAndDelete( _id )
+        const checkSubCat = await subCategoryModel.softDeleteOne(
+            { _id },
+            { deletedBy: req.userId }
+        )
+        if (!checkSubCat) {
+            return res.status(404).json({
+                message : "Sub-category not found or already deleted",
+                error : true,
+                success : false
+            })
+        }
         await cache.removeByPattern('menu:*')
 
         return res.status(200).json({

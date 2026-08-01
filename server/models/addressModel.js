@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 
 const addressSchema = new mongoose.Schema({
     address_line : {
@@ -34,5 +35,7 @@ const addressSchema = new mongoose.Schema({
 }, {
     timestamps : true
 })
+
+addressSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('address', addressSchema)
