@@ -1,112 +1,32 @@
 'use client'
 
-import { useState } from "react";
-import { FiEdit3 } from "react-icons/fi";
-import { MdDeleteForever } from "react-icons/md";
-import EditProduct from "./EditProduct";
-import ConfirmBox from "./ConfirmBox";
-import { toast } from "react-toastify";
-import Axios from "@/public/utils/Axios";
-import summaryApi from "@/public/common/summaryApi";
+import { useState } from 'react'
+import { Edit3, Package, Sparkles, Trash2 } from 'lucide-react'
+import { toast } from 'react-toastify'
+import EditProduct from './EditProduct'
+import ConfirmBox from './ConfirmBox'
+import { Button, Card, StatusBadge } from './ui'
+import Axios from '@/public/utils/Axios'
+import summaryApi from '@/public/common/summaryApi'
+import { DiscountedPrice } from '@/public/utils/DiscountedPrice'
 
 const ProductComponent = ({ data, fetchProducts }) => {
-  const [openEdit, setOpenEdit] = useState(false)
-  const [openDelete, setOpenDelete] = useState(false)
-  const [deleteData, setDeleteData] = useState({
-    _id : ""
-  })
-  
-  const handleDeleteProduct = async ( _id ) => {
-    try {
-      const response = await Axios({
-        ...summaryApi.deleteProduct,
-        data : {
-          _id : _id
-        }
-      })
-
-      const { data : responseData } = response
-
-      if( responseData.success ) {
-        toast.success(responseData.message)
-        
-        if(fetchProducts){
-          fetchProducts()
-        }
-      }
-    } catch (error) {
-      toast.error(error)
-    }
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const remove = async () => {
+    try { const response = await Axios({ ...summaryApi.deleteProduct, data: { _id: data._id } }); toast.success(response.data.message); setDeleting(false); await fetchProducts?.() }
+    catch (error) { toast.error(error.response?.data?.message || 'Unable to delete item') }
   }
-
+  const available = data.publish !== false && data.isAvailable !== false && Number(data.stock || 0) > 0
+  const finalPrice = DiscountedPrice(data.price, data.discount)
   return (
-    <div className="relative w-52 h-fit bg-white shadow-lg rounded-xl overflow-hidden cursor-pointer">
-      {/* Product Image */}
-      <div className="relative h-36">
-        <img 
-          src={data.image[0] || "https://source.unsplash.com/300x200/?food"} 
-          alt={data.name} 
-          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300 ease-in-out"
-        />
-        
-        {/* Discount Badge (Only if discount > 0) */}
-        {data.discount && parseFloat(data.discount) > 0 && (
-          <span className="absolute top-2 left-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full shadow-md animate-bounce transition-transform duration-300">
-            {data.discount}% OFF
-          </span>
-        )}
-      </div>
+    <Card className="group flex h-full flex-col overflow-hidden">
+      <div className="relative h-44 overflow-hidden bg-[var(--color-surface-soft)]"><img src={data.image?.[0]} alt={data.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />{Number(data.discount || 0) > 0 && <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#19221d] px-2.5 py-1 text-[10px] font-black uppercase text-white"><Sparkles size={11} /> {data.discount}% off</span>}<span className="absolute right-3 top-3"><StatusBadge value={available ? 'AVAILABLE' : 'OUT OF STOCK'} /></span></div>
+      <div className="flex flex-1 flex-col p-4"><h2 className="line-clamp-1 text-lg font-black">{data.name}</h2><p className="mt-1 line-clamp-1 text-xs text-[var(--color-muted)]">{data.unit || 'No unit specified'}</p><div className="mt-4 flex items-end justify-between"><div><p className="text-xs text-[var(--color-muted)]">Selling price</p><strong className="text-xl">₹{finalPrice}</strong>{Number(data.discount || 0) > 0 && <span className="ml-2 text-xs text-neutral-400 line-through">₹{data.price}</span>}</div><div className="text-right"><p className="text-xs text-[var(--color-muted)]">Stock</p><span className="inline-flex items-center gap-1 font-bold"><Package size={14} /> {data.stock || 0}</span></div></div><div className="mt-auto flex gap-2 border-t border-black/[0.06] pt-4"><Button className="flex-1" size="sm" variant="outline" onClick={() => setEditing(true)}><Edit3 size={15} /> Edit item</Button><Button size="sm" variant="ghost" className="text-red-600" onClick={() => setDeleting(true)} aria-label={`Delete ${data.name}`}><Trash2 size={16} /></Button></div></div>
+      {editing && <EditProduct close={() => setEditing(false)} prData={data} fetchProducts={fetchProducts} />}
+      {deleting && <ConfirmBox close={() => setDeleting(false)} cancel={() => setDeleting(false)} confirm={remove} />}
+    </Card>
+  )
+}
 
-      {/* Product Info */}
-      <div className="p-3 flex flex-col justify-between h-[110px]">
-        {/* Name & Price */}
-        <div className="flex justify-between items-center gap-2">
-          <h3 className="text-base font-semibold text-gray-900 text-ellipsis hover:scale-110 transition-transform duration-300 ease-in-out line-clamp-1">{data.name}</h3> 
-          <span className="text-base font-bold text-emerald-600 mr-1.5 hover:scale-110 transition-transform duration-300 ease-in-out">
-            ₹{data.price}
-          </span>
-        </div>
-
-        {/* Unit Details */}
-        <div className="text-xs font-medium text-gray-400 line-clamp-1 flex items-center gap-1 justify-between">
-          <span className="text-xs font-semibold text-gray-600">{data.unit}</span>
-
-          {/* Stock Status */}
-          <div className={`text-xs font-semibold ${data.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-            {data.stock > 0 ? "Available" : "Unavailable"} {data.stock}
-          </div>
-        </div>
-
-        {/* Description */}
-        <p className="text-xs font-medium text-gray-400 line-clamp-1">
-          {data.discription}
-        </p> 
-
-        <div className='flex w-[85%] items-center mt-2'>
-          <button 
-            className='flex-1 text-xs font-medium text-emerald-600 hover:scale-105' 
-            onClick={() => {
-              setOpenEdit(true)
-            }}
-          >
-            <FiEdit3 size={13} className='inline text-emerald-600'/>Edit
-          </button>
-          <button 
-            className='flex-1 text-xs font-medium text-red-600 hover:scale-105'
-            onClick={() => handleDeleteProduct( data._id )}
-          >
-            <MdDeleteForever size={13} className='inline text-red-600'/>Delete
-          </button>
-        </div>
-        {
-          openEdit && <EditProduct close={() => setOpenEdit(false)} prData={data} fetchProducts={fetchProducts}/>
-        }
-        {
-          openDelete && <ConfirmBox close={() => setOpenDelete(false)} cancel={() => setOpenDelete(false)} confirm={() => setOpenDelete(false)}/>
-        }
-      </div>
-    </div>
-  );
-};
-
-export default ProductComponent;
+export default ProductComponent

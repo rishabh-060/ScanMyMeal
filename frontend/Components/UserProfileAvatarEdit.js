@@ -1,101 +1,27 @@
 'use client'
-import Image from 'next/image';
-import React, { useState } from 'react'
-import { FaUserCircle } from 'react-icons/fa';
-import { IoCloseCircleSharp } from "react-icons/io5";
+
+import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { MdOutlineFileUpload } from "react-icons/md"
-import { Loader2 } from "lucide-react";
-import Axios from '@/public/utils/Axios';
-import summaryApi from '@/public/common/summaryApi';
-import { toast } from 'react-toastify';
-import { updateAvatar } from '@/public/store/userSlice';
+import { Upload } from 'lucide-react'
+import { toast } from 'react-toastify'
+import Axios from '@/public/utils/Axios'
+import summaryApi from '@/public/common/summaryApi'
+import { updateAvatar } from '@/public/store/userSlice'
+import { Button, Modal } from './ui'
 
 const UserProfileAvatarEdit = ({ close }) => {
-  const user = useSelector(state => state.user)
-  const [loading, setLoading] = useState(false);
+  const user = useSelector((state) => state.user)
+  const [loading, setLoading] = useState(false)
   const dispatch = useDispatch()
-
-
-  const handleUploadAvatar = async (e) => {
-    try {
-      const file = e.target.files[0]
-
-      if(!file){
-        return
-      }
-
-      const formData = new FormData()
-      formData.append('avatar', file)
-
-      setLoading(true)
-
-      const response = await Axios({
-        ...summaryApi.uploadAvatar,
-        data : formData
-      })
-
-      
-      dispatch(updateAvatar(response.data.data.avatar))
-      close()
-      toast.success(response?.data?.data?.massage)
-    } catch (error) {
-      toast.error(error?.response?.data?.massage)
-    } finally {
-      setLoading(false)
-      window.history.back()
-    }
+  const upload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const formData = new FormData(); formData.append('avatar', file); setLoading(true)
+    try { const response = await Axios({ ...summaryApi.uploadAvatar, data: formData }); dispatch(updateAvatar(response.data.data.avatar)); toast.success('Profile photo updated'); close?.() }
+    catch (error) { toast.error(error.response?.data?.message || 'Unable to upload photo') }
+    finally { setLoading(false) }
   }
-
-  return (
-    <section className='fixed lg:top-20 top-5 lg:bottom-20 bottom-5 lg:right-20 right-5 lg:left-20 left-5 bg-neutral-800/60 p-4 '>
-      <div className='w-full text-right'>
-        <button onClick={ close } className='text-neutral-50'><IoCloseCircleSharp size={35}/></button>
-      </div>
-
-      <div className='flex flex-col justify-center items-center w-full pt-18 gap-5'>
-        <div className='h-40 w-40 bg-amber-100 rounded-full flex justify-center items-center overflow-hidden drop-shadow-sm'>
-          {
-            user.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className='h-full w-full object-cover'
-                height={60}
-                width={60}
-              />
-            ) : (
-              <FaUserCircle size={80} className='text-neutral-400'/>
-            )
-          }
-        </div>
-
-        <form>
-          <input
-            type='file'
-            id='uploadProfile'
-            className='hidden'
-            accept="image/*"
-            onChange={handleUploadAvatar}
-          />
-
-          <label htmlFor='uploadProfile' className='text-center cursor-pointer'>
-            <div className='text-sm mt-2 min-w-22 text-center text-neutral-600 hover:text-neutral-800 font-medium px-4 py-1 bg-amber-100 hover:bg-amber-200 rounded-md'>
-              {loading ? (
-                <span className='flex justify-center items-center bg-amber-200'>
-                  <Loader2 className="animate-spin h-5 w-5 mr-2 inline"/> Uploading...
-                </span>
-              ) : (
-                <div>Upload <MdOutlineFileUpload size={17} className='inline font-extrabold'/></div>
-              )
-              }
-            </div>
-          </label>
-        </form>
-
-      </div>
-    </section>
-  )
+  return <Modal title="Change profile photo" onClose={close}><div className="grid place-items-center gap-6"><div className="grid h-40 w-40 place-items-center overflow-hidden rounded-[2rem] bg-[var(--color-surface-soft)] text-5xl font-black text-[var(--color-secondary)]">{user.avatar ? <img src={user.avatar} alt="Current profile" className="h-full w-full object-cover" /> : user.name?.slice(0,1)?.toUpperCase()}</div><p className="max-w-sm text-center text-sm leading-6 text-[var(--color-muted)]">Use a square JPEG, PNG, WebP, or GIF under the upload limit.</p><label className="cursor-pointer"><input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif" onChange={upload} /><span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-2.5 font-bold text-white shadow-lg"><Upload size={18} />{loading ? 'Uploading…' : 'Choose photo'}</span></label><Button variant="ghost" onClick={close}>Cancel</Button></div></Modal>
 }
 
 export default UserProfileAvatarEdit

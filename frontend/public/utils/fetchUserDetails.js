@@ -1,6 +1,5 @@
 import Axios from "./Axios"
 import summaryApi from "../common/summaryApi"
-import { toast } from "react-toastify"
 
 
 const fetchUserDetails = async () => {
@@ -11,8 +10,8 @@ const fetchUserDetails = async () => {
 
         return response?.data
     } catch (error) {
-        toast.error(error?.response?.data?.massage)
+        // toast.error(error?.response?.data?.massage)
     }
 }
 
-export default fetchUserDetails
+export default fetchUserDetails;

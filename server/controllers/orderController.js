@@ -1,259 +1,107 @@
-const { default: mongoose } = require('mongoose')
 const orderModel = require('../models/orderModel')
-const cartModel = require('../models/cartModel')
 const userModel = require('../models/userModel')
 const { Stripe } = require('../config/stripe')
+const AppError = require('../utils/AppError')
+const asyncHandler = require('../utils/asyncHandler')
+const { createOrder, getIdempotencyKey } = require('../services/orderService')
+const { initiateStripeCheckout, processStripeEvent } = require('../services/paymentService')
+const { PAYMENT_METHODS } = require('../constants/order')
 
-const CashOnDeliveryController = async (req, res) => {
-    try {
-        const userId = req.userId
-
-        if(!userId) {
-            return res.status(401).json({
-                error : true,
-                success : false,
-                message : "Login required"
-            })
-        }
-
-        const { list_item, totalAmt, addressId, subTOtalAmt } = req.body
-
-        if(!list_item || !totalAmt || !addressId || !subTOtalAmt) {
-            return res.status(400).json({
-                error : true,
-                success : false,
-                message : "Something is missing"
-            })
-        }
-
-        const payload = list_item.map(item => {
-            return {
-                userId : userId,
-                orderId : `SMM-ORDDER-${Date.now()}-${new mongoose.Types.ObjectId()}`,
-                productId : item.product._id,
-                product_details : {
-                    name : item.product.name,
-                    image : item.product.image
-                },
-                paymentId : "",
-                payment_status : "Cash On Delivery",
-                delivery_address : addressId,
-                subTotalAmt : subTOtalAmt,
-                totalAmt : totalAmt,
-            }
-        })
-
-        const orderData = await orderModel.insertMany(payload)
-
-        // remove item from cart
-        const removeItemFromCart = await cartModel.deleteMany({ userId : userId })
-        const userData = await userModel.updateOne({ _id : userId }, { $set : { shopping_cart : [] } })
-
-        return res.status(200).json({
-            error : false,
-            success : true,
-            message : "Order placed successfully",
-            data : {
-                orderData : orderData,
-                cartData : removeItemFromCart,
-                userData : userData
-            }
-        })
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
+const serializeOrder = (order) => {
+  const value = order.toObject ? order.toObject() : order
+  delete value.idempotencyKey
+  delete value.guestSessionId
+  if (value.payment) delete value.payment.processedEventIds
+  return value
 }
 
-const DiscountedPrice = (price, discount=0) => {
-    const priceNum = Number(price);
-    const discountNum = Number(discount);
+const CashOnDeliveryController = asyncHandler(async (req, res) => {
+  const idempotencyKey = getIdempotencyKey(req)
+  const { order, replayed } = await createOrder({
+    userId: req.userId,
+    idempotencyKey,
+    input: req.body,
+    paymentMethod: PAYMENT_METHODS.CASH,
+  })
+  return res.status(replayed ? 200 : 201).json({
+    success: true,
+    error: false,
+    message: replayed ? 'Existing order returned' : 'Order placed successfully',
+    data: serializeOrder(order),
+    replayed,
+  })
+})
 
-    if (isNaN(priceNum) || isNaN(discountNum)) return 0;
+const CardPaymentController = asyncHandler(async (req, res) => {
+  const idempotencyKey = getIdempotencyKey(req)
+  const user = await userModel.findById(req.userId).select('name email')
+  if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND')
+  const result = await initiateStripeCheckout({ user, idempotencyKey, input: req.body })
+  return res.status(result.replayed ? 200 : 201).json({
+    success: true,
+    error: false,
+    message: 'Payment session ready',
+    id: result.session.id,
+    url: result.session.url,
+    data: {
+      sessionId: result.session.id,
+      checkoutUrl: result.session.url,
+      order: serializeOrder(result.order),
+    },
+    replayed: result.replayed,
+  })
+})
 
-    const discountedAmt = (priceNum * discountNum) / 100;
-    const actualPrice = priceNum - discountedAmt;
+const webHookStripe = asyncHandler(async (req, res) => {
+  const signature = req.get('stripe-signature')
+  const secret = process.env.STRIPE_ENDPOINT_WEBHOOK_SECRET_KEY
+  if (!secret) throw new AppError('Payment webhook secret is not configured', 500, 'CONFIGURATION_ERROR')
+  let event
+  try {
+    event = Stripe.webhooks.constructEvent(req.body, signature, secret)
+  } catch (_error) {
+    throw new AppError('Invalid payment webhook signature', 400, 'INVALID_WEBHOOK_SIGNATURE')
+  }
+  const result = await processStripeEvent(event)
+  return res.status(200).json({ success: true, received: true, replayed: Boolean(result.replayed) })
+})
 
-    return Math.ceil(actualPrice);
+const getOrderProductsController = asyncHandler(async (req, res) => {
+  const page = Math.max(1, Number.parseInt(req.query.page || '1', 10))
+  const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit || '20', 10)))
+  const [orders, total] = await Promise.all([
+    orderModel.find({ userId: req.userId })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('delivery_address', 'address_line city state country pincode mobile')
+      .populate('table', 'publicId tableNumber')
+      .lean(),
+    orderModel.countDocuments({ userId: req.userId }),
+  ])
+  return res.status(200).json({
+    success: true,
+    error: false,
+    message: orders.length ? 'Orders fetched successfully' : 'No orders found',
+    data: orders.map(serializeOrder),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  })
+})
+
+const getOrderDetailsController = asyncHandler(async (req, res) => {
+  const order = await orderModel.findOne({
+    userId: req.userId,
+    $or: [{ publicOrderId: req.params.orderId }, { orderId: req.params.orderId }],
+  }).populate('delivery_address', 'address_line city state country pincode mobile')
+    .populate('table', 'publicId tableNumber')
+  if (!order) throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND')
+  return res.json({ success: true, error: false, data: serializeOrder(order) })
+})
+
+module.exports = {
+  CashOnDeliveryController,
+  CardPaymentController,
+  webHookStripe,
+  getOrderProductsController,
+  getOrderDetailsController,
 }
-
-const CardPaymentController = async (req, res) => {
-    try {
-        const userId = req.userId
-
-        if(!userId) {
-            return res.status(401).json({
-                error : true,
-                success : false,
-                message : "Login required"
-            })
-        }
-
-        const user = await userModel.findById(userId)
-
-        const { list_item, totalAmt, addressId, subTOtalAmt } = req.body
-
-        if(!list_item || !totalAmt || !addressId || !subTOtalAmt) {
-            return res.status(400).json({
-                error : true,
-                success : false,
-                message : "Something is missing"
-            })
-        }
-        const line_items = list_item.map(item => {
-            return {
-                price_data : {
-                    currency: 'inr',
-                    product_data: {
-                        name: item.product.name,
-                        images: item.product.image,
-                        metadata: {
-                            productId : item.product._id,
-                            orderId : `SMM-ORDDER-${Date.now()}-${new mongoose.Types.ObjectId()}`,
-                        }
-                    },
-                    unit_amount: DiscountedPrice(item.product.price, item.product.discount)*100,
-                },
-                adjustable_quantity: {
-                    enabled: true,
-                    minimum: 1,
-                },
-                quantity: item.quantity,
-            }
-        })
-
-        const params = {
-            submit_type: 'pay',
-            mode: 'payment',
-            payment_method_types: ['card'],
-            customer_email: user.email,
-            metadata: {
-                userId: String(userId),
-                addressId: addressId,
-                subTotalAmt: String(subTOtalAmt),
-                totalAmt: String(totalAmt),
-            },
-            line_items: line_items,
-            success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`, //?session_id={CHECKOUT_SESSION_ID}
-            cancel_url: `${process.env.FRONTEND_URL}/cancel`,
-        }
-
-        const session = await Stripe?.checkout?.sessions?.create(params);
-        
-        return res.status(200).json(session)
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
-}
-
-const getOrderProductItems = async (lineItems, userId, session) => {
-    const productList = []
-
-    if (lineItems?.data?.length){
-        for(const item of lineItems.data) {
-            const product = await Stripe?.products.retrieve(item.price.product);
-            
-            const payload = {
-                userId : userId,
-                orderId : `SMM-ORDDER-${Date.now()}-${new mongoose.Types.ObjectId()}`,
-                productId : product.metadata.productId,
-                product_details : {
-                    name : product.name,
-                    image : [product.image],
-                },
-                paymentId : session.payment_intent,
-                payment_status : session.payment_status,
-                delivery_address : session.metadata.addressId,
-                subTotalAmt : Number(session.amount_subtotal / 100),
-                totalAmt : Number(session.amount_total / 100),
-            }
-
-            productList.push(payload)
-        }
-    }
-
-    return productList
-}
-
-// http://localhost:8080/api/order/web-hook
-const webHookStripe = async (req, res) => {
-    try {
-        const event = req.body
-        const endPointSecret = process.env.Stripe_ENDPOINT_WEBHOOK_SECRET_KEY
-
-        // Handle the event
-        switch (event?.type) {
-            case 'checkout.session.completed':
-                const session = event.data.object
-                const lineItems = await Stripe.checkout.sessions.listLineItems(session.id);
-                const userId = session.metadata.userId
-
-                const orderProduct = await getOrderProductItems(lineItems, userId, session)
-                
-                const order = await orderModel.insertMany(orderProduct)
-                
-                if(order) {
-                    const removeCartItem = await userModel.findByIdAndUpdate({ _id : userId }, { shopping_cart : [] })
-                    const removeCartProduct = await cartModel.deleteMany({ userId : userId })
-                }
-                break;
-            default:
-                console.log(`Unhandled event type ${event.type}`);
-        }
-        console.log("Done with webhook")
-        return res.json({received: true});
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
-}
-
-const getOrderProductsController = async (req, res) => {
-    try {
-        const userId = req.userId
-
-        if(!userId) {
-            return res.status(401).json({
-                error : true,
-                success : false,
-                message : "Login required"
-            })
-        }
-
-        const orders = await orderModel.find({ userId: userId }).sort({ createdAt: -1 }).populate('delivery_address', 'address_line city state country pincode mobile')
-
-        if (!orders || orders.length === 0) {
-            return res.status(200).json({
-                error : false,
-                success : true,
-                message : "No orders found",
-                data : []
-            })
-        }
-
-        return res.status(200).json({
-            error : false,
-            success : true,
-            message : "Order fetched successfully",
-            data : orders
-        })
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
-}
-
-module.exports = { CashOnDeliveryController, CardPaymentController, webHookStripe, getOrderProductsController }

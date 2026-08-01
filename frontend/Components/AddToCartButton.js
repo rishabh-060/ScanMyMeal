@@ -13,8 +13,10 @@ const AddToCartButton = ({ data }) => {
     const [loading, setLoading] = useState(false)
     const cartItem = useSelector(state => state.cartItem.cart)
     const [isAvailable, setIsAvailable] = useState(false)
+    const [serverUnavailable, setServerUnavailable] = useState(false)
     const [quantity, setQuantity] = useState(1)
     const [cartItemDetail, setCartItemDetail] = useState()
+    const canAdd = data?.publish !== false && data?.isAvailable !== false && Number(data?.stock || 0) > 0 && !serverUnavailable
 
     const handleAddToCart = async (e) => {
       e.preventDefault()
@@ -36,6 +38,9 @@ const AddToCartButton = ({ data }) => {
           toast.success(responseData?.message)
         }
       } catch (error) {
+        if (error?.response?.data?.code === 'PRODUCT_UNAVAILABLE') {
+          setServerUnavailable(true)
+        }
         toast.error(error?.response?.data?.message)
       } finally {
         if(fetchCartItem) fetchCartItem()
@@ -48,7 +53,7 @@ const AddToCartButton = ({ data }) => {
         e.stopPropagation()
     
         const response = await updateCartItem(cartItemDetail?._id, quantity + 1)
-        if(response.success) {
+        if(response?.success) {
           toast.success('Item added successfully')
           setQuantity(quantity + 1)
         } else {
@@ -68,7 +73,7 @@ const AddToCartButton = ({ data }) => {
       }
 
       const response = await updateCartItem(cartItemDetail?._id, quantity - 1)
-      if(response.success) {
+      if(response?.success) {
         toast.success('Item removed successfully')
         setQuantity(quantity - 1)
       } else {
@@ -86,24 +91,29 @@ const AddToCartButton = ({ data }) => {
         setCartItemDetail(checkingQuantity)
     }, [ data, cartItem ])
 
+    useEffect(() => {
+      setServerUnavailable(false)
+    }, [data?._id, data?.stock, data?.isAvailable, data?.publish])
+
   return (
     <div>
       {
         isAvailable ? (
-          <div className="flex items-center gap-0.5 rounded-md justify-center bg-transparent">
+          <div className="flex items-center justify-center gap-1 rounded-xl bg-[var(--color-surface-soft)] p-1">
           <button
-            className="w-8 h-8 flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white text-lg font-bold rounded transition-transform hover:scale-105"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[var(--color-text)] shadow-sm hover:bg-[#fff1eb] hover:text-[var(--color-primary)]"
             onClick={handleDecreaseItem}
             aria-label="Decrease quantity"
           >
             <HiMinus />
           </button>
 
-          <p className="w-6 text-center font-medium">{quantity}</p>
+          <p className="w-6 text-center text-sm font-black">{quantity}</p>
 
           <button
-            className="w-8 h-8 flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white text-lg font-bold rounded transition-transform hover:scale-105"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-primary)] text-white shadow-sm hover:bg-[var(--color-primary-strong)] disabled:opacity-40"
             onClick={handleIncreaseItem}
+            disabled={loading || quantity >= Number(data.stock || 0)}
             aria-label="Increase quantity"
           >
             <HiPlus />
@@ -112,7 +122,8 @@ const AddToCartButton = ({ data }) => {
         ) : (
           <button
           onClick={handleAddToCart}
-          className="w-full py-2 bg-amber-500 text-white rounded hover:bg-amber-700 hover:scale-105 transition-transform font-medium text-sm flex items-center justify-center"
+          disabled={loading || !canAdd}
+          className="flex min-h-9 min-w-18 items-center justify-center rounded-xl bg-[var(--color-primary)] px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-[var(--color-primary-strong)] disabled:opacity-50"
           >
           {
             loading ? (
@@ -125,7 +136,7 @@ const AddToCartButton = ({ data }) => {
               <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8A8.009 8.009 0 0 1 12 20Z"/>
             </svg>
             ) : (
-            <span>Add</span>
+            <span>{canAdd ? 'Add' : 'Unavailable'}</span>
             )
           }
           </button>

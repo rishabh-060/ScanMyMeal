@@ -1,175 +1,52 @@
 const addressModel = require('../models/addressModel')
 const userModel = require('../models/userModel')
+const AppError = require('../utils/AppError')
+const asyncHandler = require('../utils/asyncHandler')
 
-const addAddressController = async (req, res) => {
-    try {
-        const userId = req.userId
-
-        if (!userId){
-            return res.status(400).json({
-                message: 'Login Required',
-                success: false,
-                error: true
-            })
-        }
-
-        const { address_line, mobile, city, state, pincode, country } = req.body
-
-        if( !address_line || !mobile || !city || !state || !pincode || !country ) {
-            return res.status(400).json({
-                message: 'All fields required',
-                success: false,
-                error: true
-            })
-        }
-
-        const newAddress = await addressModel({
-            address_line, mobile, city, state, pincode, country, userId
-        })
-        const save = newAddress.save()
-
-        const addUserAddressId = await userModel.findByIdAndUpdate(userId, {
-            $push: { 
-                address_details : save._id
-             }
-        })
-
-        if(save) {
-            return res.status(200).json({
-                message: 'Address added successfully',
-                success: true,
-                error: false,
-                data : save
-            })
-        }
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
-}
-
-const getAddressController = async (req, res) => {
-    try {
-        const userId = req.userId
-
-        const address = await addressModel.find({ userId : userId }).sort({ createdAt : -1 })
-
-        if (!address) {
-            return res.status(200).json({
-                message: 'No address found',
-                success: true,
-                error: false,
-                data: []
-            })
-        }
-        return res.status(200).json({
-            message: 'Address fetched successfully',
-            success: true,
-            error: false,
-            data : address
-        })
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
-}
-
-const updateAddressController = async (req, res) => {
-    try {
-        const userId = req.userId
-
-        if (!userId){
-            return res.status(400).json({
-                message: 'Login Required',
-                success: false,
-                error: true
-            })
-        }
-
-        const { _id, address_line, mobile, city, state, pincode, country } = req.body
-
-        if( !_id || !address_line || !mobile || !city || !state || !pincode || !country ) {
-            return res.status(400).json({
-                message: 'All fields required',
-                success: false,
-                error: true
-            })
-        }
-
-        const address = await addressModel.updateOne({ _id: _id, userId: userId }, {
-            address_line, mobile, city, state, pincode, country
-        })
-
-        return res.status(200).json({
-            message: 'Address updated successfully',
-            success: true,
-            error: false,
-            data : address
-        })
-    } catch (error) {
-        return res.status(500).json({
-            error : true,
-            success : false,
-            message : error.message || error
-        })
-    }
-}
-
-const removeAddressController = async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(401).json({
-        message: 'Login required',
-        success: false,
-        error: true,
-      });
-    }
-
-    const { _id } = req.body;
-
-    if (!_id) {
-      return res.status(400).json({
-        message: 'Address ID required',
-        success: false,
-        error: true,
-      });
-    }
-
-    // Soft delete the address
-    const result = await addressModel.updateOne(
-      { _id, userId },
-      { status: false }
-    );
-
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({
-        message: 'Address not found or already deleted',
-        success: false,
-        error: true,
-      });
-    }
-
-    return res.status(200).json({
-      message: 'Address removed successfully',
-      success: true,
-      error: false,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || 'Internal server error',
-    });
+const addressPayload = (body) => {
+  const payload = {
+    address_line: String(body.address_line || '').trim(),
+    mobile: Number(body.mobile),
+    city: String(body.city || '').trim(),
+    state: String(body.state || '').trim(),
+    pincode: String(body.pincode || '').trim(),
+    country: String(body.country || '').trim(),
   }
-};
+  if (!payload.address_line || !Number.isFinite(payload.mobile) || !payload.city || !payload.state || !payload.pincode || !payload.country) {
+    throw new AppError('All address fields are required', 400, 'INVALID_ADDRESS')
+  }
+  return payload
+}
 
+const addAddressController = asyncHandler(async (req, res) => {
+  const address = await addressModel.create({ ...addressPayload(req.body), userId: req.userId })
+  await userModel.updateOne({ _id: req.userId }, { $addToSet: { address_details: address._id } })
+  return res.status(201).json({ success: true, error: false, message: 'Address added successfully', data: address })
+})
+
+const getAddressController = asyncHandler(async (req, res) => {
+  const addresses = await addressModel.find({ userId: req.userId }).sort({ createdAt: -1 })
+  return res.json({ success: true, error: false, message: 'Addresses fetched successfully', data: addresses })
+})
+
+const updateAddressController = asyncHandler(async (req, res) => {
+  const address = await addressModel.findOneAndUpdate(
+    { _id: req.body._id, userId: req.userId, status: true },
+    { $set: addressPayload(req.body) },
+    { new: true, runValidators: true },
+  )
+  if (!address) throw new AppError('Address not found', 404, 'ADDRESS_NOT_FOUND')
+  return res.json({ success: true, error: false, message: 'Address updated successfully', data: address })
+})
+
+const removeAddressController = asyncHandler(async (req, res) => {
+  const address = await addressModel.findOneAndUpdate(
+    { _id: req.body._id, userId: req.userId, status: true },
+    { $set: { status: false } },
+    { new: true },
+  )
+  if (!address) throw new AppError('Address not found or already removed', 404, 'ADDRESS_NOT_FOUND')
+  return res.json({ success: true, error: false, message: 'Address removed successfully' })
+})
 
 module.exports = { addAddressController, getAddressController, updateAddressController, removeAddressController }

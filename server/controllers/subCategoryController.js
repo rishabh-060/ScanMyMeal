@@ -1,4 +1,5 @@
 const subCategoryModel = require('../models/subCategoryModel')
+const cache = require('../services/cacheService')
 
 
 const addSubcategoryController = async (req, res) => {
@@ -21,6 +22,7 @@ const addSubcategoryController = async (req, res) => {
 
         const createSubCategory = new subCategoryModel(payload)
         const save = await createSubCategory.save()
+        await cache.removeByPattern('menu:*')
 
         if (save) {
             return res.status(200).json({
@@ -96,6 +98,7 @@ const editSubCategoryController = async (req, res) => {
             image,
             category
         })
+        await cache.removeByPattern('menu:*')
         
         return res.status(200).json({
             message : "Update Sub-Category Successfully",
@@ -116,6 +119,7 @@ const deleteSubCategoryController = async (req, res) => {
     try {
         const { _id } = req.body
         const checkSubCat = await subCategoryModel.findByIdAndDelete( _id )
+        await cache.removeByPattern('menu:*')
 
         return res.status(200).json({
             message : "Sub-Category Deleted Successfully",

@@ -1,110 +1,31 @@
 'use client'
+
+import { useState } from 'react'
+import { useSelector } from 'react-redux'
+import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'react-toastify'
 import AddAddress from '@/Components/AddAddress'
-import BacktoHome from '@/Components/BacktoHome'
-import Divider from '@/Components/Divider'
 import EditAddress from '@/Components/EditAddress'
-import RestrictUser from '@/Components/RestrictUser'
-import useMobile from '@/hooks/useMobile'
 import { useGlobalContext } from '@/provider/GlobalProvider'
 import summaryApi from '@/public/common/summaryApi'
 import Axios from '@/public/utils/Axios'
-import React, { useEffect, useState } from 'react'
-import { MdAddHome, MdDelete, MdEdit  } from "react-icons/md";
-import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
+import { Button, Card, EmptyState, PageHeader } from '@/Components/ui'
 
-const Address = () => {
-  const [ isMobile ] = useMobile()
-  const [openAddress, setOpenAddress] = useState(false)
-  const [openEditAddress, setOpenEditAddress] = useState(false)
-  const [editData, setEditData] = useState({})
-  const address = useSelector(state => state.addresses.addressList)
+export default function Address() {
+  const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const addresses = useSelector((state) => state.addresses.addressList).filter((item) => item.status)
   const { fetchAddress } = useGlobalContext()
-  const user = useSelector((state) => state.user)
-  
-  useEffect(() => {
-    if (!user) {
-        <RestrictUser />
-    }
-  }, [])
-
-  const handleDisableAddress = async (id) => {
-    try {
-      const response = await Axios({
-        ...summaryApi.deleteAddress,
-        data: {
-          _id: id
-        }
-      });
-      const { data: responseData } = response;
-      if (responseData.success) {
-        toast.success(responseData?.message);
-        if(fetchAddress) fetchAddress();
-      }
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete address.");
-    }
+  const remove = async (id) => {
+    try { const response = await Axios({ ...summaryApi.deleteAddress, data: { _id: id } }); toast.success(response.data.message || 'Address removed'); await fetchAddress?.() }
+    catch (error) { toast.error(error.response?.data?.message || 'Unable to remove address') }
   }
-
   return (
-    <main className='px-2 lg:px-5'>
-      {
-        isMobile && <BacktoHome />
-      }
-      <h1 className='text-emerald-600 font-bold text-center my-2 lg:my-6 text-2xl'>Saved Addresses</h1>
-
-      <Divider />
-
-      <div className='w-full my-5 flex flex-row-reverse'>
-        <button onClick={() => setOpenAddress(true)} className='mr-1 bg-emerald-700 hover:bg-emerald-600 text-neutral-200 text-sm font-medium rounded-sm px-5 py-1.5'>Add new address <MdAddHome size={18} className='text-neutral-200 inline font-bold'/></button>
-      </div>
-
-      <section className='bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5'>
-        <div className='grid gap-4'>
-          {
-            address?.length > 0 ? (
-              address.map((item, index) => (
-                <div key={index} className={`bg-neutral-100 hover:bg-neutral-200 shadow-md rounded-lg p-4 flex justify-between transition-transform duration-100 ease-in-out ${ !item.status && 'hidden'}`}>
-                  <div>
-                    <h2 className='text-lg font-semibold text-neutral-700'>{item.address_line}</h2>
-                    <p className='text-neutral-500 font-semibold text-sm lg:text-base'>{item.city} - {item.state}</p>
-                    <p className='text-neutral-500 font-semibold text-sm lg:text-base'>{item.country} - {item.pincode}</p>
-                    <p className='text-neutral-500 font-semibold text-sm lg:text-base'>{item.mobile}</p>
-                  </div>
-
-                  <div className='flex gap-2 justify-end h-fit'>
-                    <button
-                      onClick={() => {
-                        setEditData(item)
-                        setOpenEditAddress(true)
-                      }}
-                      className='border-green-500 hover:border-green-600 text-white font-semibold text-sm rounded-md flex items-center'
-                    >
-                      <MdEdit size={22} className='mr-1 text-green-500 hover:text-green-600 font-semibold' />
-                    </button>
-                    <button
-                      onClick={() => handleDisableAddress(item._id)}
-                      className='border-red-500 hover:border-red-600 text-white font-semibold text-sm  rounded-md flex items-center'
-                    >
-                      <MdDelete size={22} className='mr-1 text-red-500 hover:text-red-600 font-semibold' />
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className='text-center text-gray-500'>No addresses found</div>
-            )
-          }
-        </div>
-      </section>
-      {
-        openAddress && <AddAddress close={() => setOpenAddress(false)}/>
-      }
-      {
-        openEditAddress && <EditAddress close={() => setOpenEditAddress(false)} editData={editData}/>
-      }
+    <main className="space-y-6">
+      <PageHeader eyebrow="Delivery details" title="Saved addresses" description="Keep your usual delivery locations ready for a quicker checkout." action={<Button onClick={() => setAdding(true)}><Plus size={18} /> Add address</Button>} />
+      {!addresses.length ? <EmptyState title="No saved addresses" description="Add your home, office, or another delivery location." action={<Button onClick={() => setAdding(true)}><Plus size={18} /> Add your first address</Button>} /> : <div className="grid gap-4 md:grid-cols-2">{addresses.map((address, index) => <Card key={address._id} className="group p-5"><div className="flex items-start gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#fff1eb] text-[var(--color-primary)]"><MapPin size={20} /></span><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[var(--color-muted)]">Address {index + 1}</p><h2 className="mt-1 font-black">{address.address_line}</h2></div><div className="flex gap-1"><button onClick={() => setEditing(address)} className="grid h-9 w-9 place-items-center rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]" aria-label="Edit address"><Pencil size={17} /></button><button onClick={() => remove(address._id)} className="grid h-9 w-9 place-items-center rounded-lg text-[var(--color-error)] hover:bg-red-50" aria-label="Remove address"><Trash2 size={17} /></button></div></div><p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">{address.city}, {address.state} {address.pincode}<br />{address.country} · {address.mobile}</p></div></div></Card>)}</div>}
+      {adding && <AddAddress close={() => setAdding(false)} />}
+      {editing && <EditAddress close={() => setEditing(null)} editData={editing} />}
     </main>
   )
 }
-
-export default Address

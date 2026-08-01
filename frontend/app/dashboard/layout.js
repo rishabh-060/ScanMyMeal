@@ -1,36 +1,19 @@
 'use client'
-import BacktoHome from '@/Components/BacktoHome'
+
+import { useSelector } from 'react-redux'
 import RestrictUser from '@/Components/RestrictUser'
 import UserMenu from '@/Components/userMenu'
-import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
-import { useSelector } from 'react-redux'
 
-const layout = ({children}) => {
+export default function DashboardLayout({ children }) {
   const user = useSelector((state) => state.user)
-  useEffect(() => {
-    // if user is not logged in, redirect to login page
-    if (!user) {
-        <RestrictUser/>
-    }
-  }, [])
-
+  if (!user?.id) return <RestrictUser />
   return (
-    <section className='max-w-full min-h-[65vh] lg:min-h-[68vh] lg:m-2 px-4'>
-        <div className='container mx-auto grid lg:grid-cols-[250px_1fr] gap-4'>
-            <aside className='sticky top-0 px-4 overflow-y-auto bg-neutral-100 hidden lg:block py-2 border-r border-neutral-300'>
-                <BacktoHome />
-                <UserMenu />
-            </aside>
-
-            {React.Children.map(children, (child) => (
-                <main className="p-4 bg-neutral-100 ">
-                    {children}
-                </main>
-            ))}
-        </div>
-    </section>
+    <main className="page-container py-6 lg:py-10">
+      <div className="mb-5 overflow-x-auto rounded-2xl border border-black/[0.06] bg-white p-2 shadow-sm lg:hidden"><UserMenu compact /></div>
+      <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="sticky top-24 hidden h-fit rounded-[var(--radius-card)] border border-black/[0.06] bg-white p-3 shadow-[var(--shadow-card)] lg:block"><UserMenu /></aside>
+        <section className="min-w-0">{children}</section>
+      </div>
+    </main>
   )
 }
-
-export default layout

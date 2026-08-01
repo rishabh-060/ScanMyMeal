@@ -1,142 +1,37 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import Axios from '@/public/utils/Axios';
-import summaryApi from '@/public/common/summaryApi';
+'use client'
 
-const VerifyEmail = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const token = searchParams.get('code');
-  const [status, setStatus] = useState('loading'); // 'loading' | 'success' | 'error'
-  const [countdown, setCountdown] = useState(3);
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import Axios from '@/public/utils/Axios'
+import summaryApi from '@/public/common/summaryApi'
+import useChangePath from '@/hooks/changePath'
+import { AuthShell } from '@/Components/AuthShell'
+import { Button } from '@/Components/ui'
 
-  const verifyEmail = async () => {
-    setStatus('loading');
-    if (!token) {
-      setStatus('error');
-      toast.error('Invalid verification link');
-      return;
-    }
+export default function VerifyEmail() {
+  const token = useSearchParams().get('code')
+  const [status, setStatus] = useState('loading')
+  const [countdown, setCountdown] = useState(3)
+  const changePath = useChangePath()
 
-    try {
-      const res = await Axios({
-        ...summaryApi.verifyEmail,
-        data: {
-          code: token
-        }
-      });
-
-      if (res.data.success) {
-        setStatus('success');
-        // toast.success('Email verified successfully!');
-      } else {
-        setStatus('error');
-        // toast.error(res.data.message || 'Verification failed');
-      }
-    } catch (err) {
-      setStatus('error');
-      // toast.error('Something went wrong during verification');
-    }
-  };
-
+  const verify = async () => {
+    if (!token) return setStatus('error')
+    setStatus('loading')
+    try { const response = await Axios({ ...summaryApi.verifyEmail, data: { code: token } }); setStatus(response.data.success ? 'success' : 'error') }
+    catch { setStatus('error') }
+  }
+  useEffect(() => { verify() }, [token])
   useEffect(() => {
-    verifyEmail();
-  }, [token]);
-
-  // Redirect after success
-  useEffect(() => {
-    if (status === 'success') {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === 1) {
-            router.push('/login');
-            clearInterval(timer);
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [status]);
+    if (status !== 'success') return
+    const timer = window.setInterval(() => setCountdown((value) => { if (value <= 1) { window.clearInterval(timer); changePath('/login'); return 0 } return value - 1 }), 1000)
+    return () => window.clearInterval(timer)
+  }, [status])
 
   return (
-    <section className="flex items-center justify-center min-h-[70vh] bg-white px-4">
-      <div className="relative w-full max-w-md bg-gray-200 backdrop-blur-md rounded-2xl shadow-2xl p-8 text-center animate-fadeInUp">
-        {status === 'loading' && (
-          <div className="flex flex-col items-center gap-4 animate-fadeIn">
-            <Loader2 className="animate-spin text-yellow-400 w-12 h-12" />
-            <p className="text-gray-600 mt-2">Verifying your email...</p>
-            <div className="w-3/4 h-1 bg-gray-500 rounded-full overflow-hidden">
-              <div className="h-full bg-yellow-400 animate-loadingBar"></div>
-            </div>
-          </div>
-        )}
-
-        {status === 'success' && (
-          <div className="flex flex-col items-center gap-4 animate-fadeIn">
-            <CheckCircle className="text-green-400 w-16 h-16 drop-shadow-lg" />
-            <h1 className="text-2xl font-semibold">Email Verified!</h1>
-            <p className="text-gray-600 max-w-sm mx-auto">
-              Your email has been successfully verified.
-              <br />Redirecting to login in {countdown}s...
-            </p>
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div className="flex flex-col items-center gap-4 animate-fadeIn">
-            <XCircle className="text-red-400 w-16 h-16 drop-shadow-lg" />
-            <h1 className="text-2xl font-semibold">Verification Failed</h1>
-            <p className="text-gray-600 max-w-sm mx-auto">
-              The verification link is invalid or expired. Please request a new one.
-            </p>
-            <button
-              onClick={() => verifyEmail()}
-              className="mt-4 px-6 py-2 rounded-lg bg-yellow-400 text-black font-medium hover:bg-yellow-300 transition-transform hover:scale-105"
-            >
-              Retry Verification
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Animations */}
-      <style jsx>{`
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease forwards;
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-loadingBar {
-          animation: loadingBar 1.5s ease-in-out infinite;
-        }
-        @keyframes loadingBar {
-          0% {
-            transform: translateX(-100%);
-          }
-          50% {
-            transform: translateX(0%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
-    </section>
-  );
-};
-
-export default VerifyEmail;
+    <AuthShell eyebrow="Email verification" title={status === 'loading' ? 'Checking your link' : status === 'success' ? 'You’re verified' : 'Link not accepted'} description={status === 'loading' ? 'Please keep this page open for a moment.' : status === 'success' ? 'Your account is ready for sign in.' : 'This link may be invalid, expired, or already used.'} footer={<Link href="/login" className="font-bold text-[var(--color-primary)] hover:underline">Return to sign in</Link>}>
+      <div className="grid min-h-56 place-items-center text-center">{status === 'loading' && <div><Loader2 className="mx-auto animate-spin text-[var(--color-primary)]" size={52} /><p className="mt-5 font-bold">Verifying securely…</p></div>}{status === 'success' && <div><CheckCircle2 className="mx-auto text-[var(--color-secondary)]" size={64} /><p className="mt-5 font-bold">Redirecting to sign in in {countdown}s</p></div>}{status === 'error' && <div><XCircle className="mx-auto text-[var(--color-error)]" size={64} /><p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[var(--color-muted)]">Request another verification email from the sign-in screen, or retry if the link was opened before the page finished loading.</p><Button className="mt-5" onClick={verify}>Try this link again</Button></div>}</div>
+    </AuthShell>
+  )
+}

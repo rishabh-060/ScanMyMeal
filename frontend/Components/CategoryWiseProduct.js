@@ -1,104 +1,56 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 import summaryApi from '@/public/common/summaryApi'
 import Axios from '@/public/utils/Axios'
-import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
 import CardLoading from './CardLoading'
 import CardProduct from './CardProduct'
 import NoData from './NoData'
 import useChangePath from '@/hooks/changePath'
-import { useSelector } from 'react-redux'
 import { ValidUrlConvert } from '@/public/utils/ValidUrlConvert'
-import Loader from './Loader'
 
 const CategoryWiseProduct = ({ id, name }) => {
   const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [pageChange, setPageChange] = useState(false)
-  const subCategoryData = useSelector(state => state.product.allSubCategory)
-
+  const [loading, setLoading] = useState(true)
+  const subCategories = useSelector((state) => state.product.allSubCategory)
   const changePath = useChangePath()
 
-  const handleRedirectProductList = () => {
-    const subCategory = subCategoryData.find((sub) => {
-      return sub.category.some((c) => c._id === id)
-    })
-
-    if (!subCategory) {
-      toast.warning("No subcategory found")
-      return null
-    }
-
-    const url = `/category/${ValidUrlConvert(name)}-${id}/subcategory/${ValidUrlConvert(subCategory.name)}-${subCategory._id}`
-    return url
-  }
-
-  const fetchCategoryWiseProduct = async () => {
-    try {
-      setLoading(true)
-      const response = await Axios({
-        ...summaryApi.getProductByCategory,
-        data: { id: id }
-      })
-
-      const { data: responseData } = response
-
-      if (responseData.success) {
-        setData(responseData?.data)
-      }
-    } catch (error) {
-      toast.error(error?.data?.message)
-    } finally {
-      setLoading(false)
-    }
+  const destination = () => {
+    const sub = subCategories.find((item) => item.category.some((category) => category._id === id))
+    return sub ? `/category/${ValidUrlConvert(name)}-${id}/subcategory/${ValidUrlConvert(sub.name)}-${sub._id}` : ''
   }
 
   useEffect(() => {
-    fetchCategoryWiseProduct()
-  }, [])
+    let mounted = true
+    Axios({ ...summaryApi.getProductByCategory, data: { id } })
+      .then((response) => mounted && setData(response.data.data || []))
+      .catch()
+      .finally(() => mounted && setLoading(false))
+    return () => { mounted = false }
+  }, [id, name])
+
+  const openAll = (event) => {
+    event.preventDefault()
+    const url = destination()
+    if (!url) return toast.info('More items are coming soon')
+    changePath(url)
+  }
+
+  if(!data.length && !loading) {
+    return <></>;
+  };
 
   return (
-    <div className="container w-full mt-4 lg:mt-8 mb-3 lg:mb-5 px-2">
-      {pageChange && <Loader />}
-      {/* Header */}
-      <div className="flex justify-between items-center gap-2 border-b border-amber-700 pb-2">
-        <h1 className="text-lg lg:text-2xl font-bold text-amber-700 capitalize tracking-wide">
-          {name}
-        </h1>
-        <Link
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setPageChange(true)
-            const redirectUrl = handleRedirectProductList();
-            if (redirectUrl) changePath(redirectUrl);
-            setPageChange(false)
-          }}
-          className="text-sm lg:text-base font-semibold text-amber-800 hover:text-amber-600 transition-colors duration-200 px-2"
-        >
-          See All →
-        </Link>
+    <div className="w-full">
+      <div className="flex items-end justify-between gap-4">
+        <div><p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--color-primary)]">Popular picks</p><h2 className="mt-1 text-xl font-black capitalize tracking-tight lg:text-2xl">{name}</h2></div>
+        <Link href={destination() || '#'} onClick={openAll} className="rounded-full border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-bold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]">See all →</Link>
       </div>
-
-      {/* Scrollable Product Row */}
-      <section className="w-full py-5 flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory no-scrollbar">
-        {loading ? (
-          Array.from({ length: 10 }).map((_, index) => (
-            <div key={`load-${index}`} className="snap-start flex-shrink-0 w-48">
-              <CardLoading />
-            </div>
-          ))
-        ) : data.length > 0 ? (
-          data.map((item, index) => (
-            item._id && (
-              <div key={`product-${index}`} className="snap-start flex-shrink-0 w-52">
-                <CardProduct data={item} />
-              </div>
-            )
-          ))
-        ) : (
-          <NoData />
-        )}
+      <section className="no-scrollbar flex w-full snap-x snap-mandatory gap-4 overflow-x-auto py-5 scroll-smooth">
+        {loading ? Array.from({ length: 6 }).map((_, index) => <CardLoading key={index} />) : data.length ? data.map((item) => <div key={item._id} className="snap-start"><CardProduct data={item} /></div>) : <NoData />}
       </section>
     </div>
   )

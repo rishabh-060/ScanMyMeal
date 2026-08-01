@@ -1,13 +1,15 @@
 const { Router } = require('express')
 const auth = require('../middlewares/auth')
-const express = require('express');
-const { CashOnDeliveryController, CardPaymentController, webHookStripe, getOrderProductsController } = require('../controllers/orderController')
+const { CashOnDeliveryController, CardPaymentController, getOrderProductsController, getOrderDetailsController } = require('../controllers/orderController')
+const { createRateLimiter } = require('../middlewares/rateLimit')
 
 const orderRouter = Router()
 
-orderRouter.post('/COD-order', auth, CashOnDeliveryController)
-orderRouter.post('/PAID-order', auth, CardPaymentController)
-orderRouter.post('/web-hook', express.raw({ type: 'application/json' }), webHookStripe)
+const orderLimiter = createRateLimiter({ scope: 'order-create', limit: 12, windowMs: 60_000 })
+
+orderRouter.post('/COD-order', auth, orderLimiter, CashOnDeliveryController)
+orderRouter.post('/PAID-order', auth, orderLimiter, CardPaymentController)
 orderRouter.get('/get-orders', auth, getOrderProductsController)
+orderRouter.get('/:orderId', auth, getOrderDetailsController)
 
 module.exports = { orderRouter }

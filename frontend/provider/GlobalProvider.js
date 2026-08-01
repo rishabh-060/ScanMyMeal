@@ -8,6 +8,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { setOrders } from '@/public/store/orderSlice';
+import { logout as clearUser } from '@/public/store/userSlice';
 
 const GlobalContext = createContext(null);
 
@@ -32,7 +33,6 @@ export const GlobalProvider = ({ children }) => {
             dispatch(handleAddItemCart(responseData?.data));
           }
         } catch (error) {
-          console.log('error', error)
           toast.error(error?.response?.data?.message);
         } 
     };
@@ -80,8 +80,10 @@ export const GlobalProvider = ({ children }) => {
     }
 
     const handleLogout = () => {
-      localStorage.clear()
+      dispatch(clearUser())
       dispatch(handleAddItemCart([]))
+      dispatch(handleAddAddress([]))
+      dispatch(setOrders([]))
     }
 
     const fetchAddress = async () => {
@@ -145,6 +147,11 @@ export const GlobalProvider = ({ children }) => {
         dispatch(setOrders([]));
       }
     }, [user?.id]);
+
+    useEffect(() => {
+      window.addEventListener('session-expired', handleLogout)
+      return () => window.removeEventListener('session-expired', handleLogout)
+    }, [])
 
   return (
     <GlobalContext.Provider value={

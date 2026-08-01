@@ -13,6 +13,7 @@ const initialValue = {
     shopping_cart : [],
     order_history : [],
     role : "",
+    permissions : [],
     createdAt : "",
     updatedAt : ""
 }
@@ -34,6 +35,7 @@ const userSlice = createSlice({
             state.shopping_cart = action.payload?.shopping_cart
             state.order_history = action.payload?.order_history
             state.role = action.payload?.role
+            state.permissions = action.payload?.permissions || []
             state.createdAt = action.payload?.createdAt
             state.updatedAt = action.payload?.updatedAt
         },
@@ -53,6 +55,7 @@ const userSlice = createSlice({
             state.shopping_cart = []
             state.order_history = []
             state.role = ""
+            state.permissions = []
             state.createdAt = ""
             state.updatedAt = ""
         }

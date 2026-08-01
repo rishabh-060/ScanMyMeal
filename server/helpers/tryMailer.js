@@ -1,8 +1,5 @@
 const nodemailer = require("nodemailer");
-const { default: verifyEmailTemplate } = require("../templates/verifyEmailTemplate");
-const dotenv = require('dotenv');
-
-dotenv.config({path : '../config/config.env'})
+const logger = require('../utils/logger')
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -25,10 +22,9 @@ async function sendMail(to, subject, text, html) {
       text,
       html,
     });
-    // console.log("Email sent:", info);
     return {info, success : true}
   } catch (error) {
-    // console.error("Email sending :", error);
+    logger.warn('email_delivery_failed', { error: error.message })
     return {error, success : false}
   }
 }

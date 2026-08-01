@@ -1,6 +1,5 @@
-const generateOtp = async (req, res) => {
-    const value = await Math.floor(Math.random() * 900000) + 100000
-    return value
-}
+const { randomInt } = require('crypto')
+
+const generateOtp = () => String(randomInt(100000, 1000000))
 
 module.exports = generateOtp

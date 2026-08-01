@@ -12,7 +12,6 @@ import Home from "@/Components/Home";
 
 const page = () => {
   const dispatch = useDispatch();
-  const [isMobile] = useMobile();
 
   const fetchUser = async () => {
     const userData = await fetchUserDetails();
@@ -75,11 +74,9 @@ const page = () => {
   };
 
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
       const response = await Axios({
         ...summaryApi.getProduct,
         data: {
@@ -93,9 +90,8 @@ const page = () => {
         dispatch(setProduct(responseData.data));
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      // toast.error(error?.response?.data?.message);
     } finally {
-      setLoading(false);
     }
   };
 

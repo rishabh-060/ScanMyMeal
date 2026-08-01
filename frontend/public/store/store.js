@@ -13,6 +13,7 @@ import orderReducer from './orderSlice'
 const persistConfig = {
   key: 'root',
   storage,
+  blacklist: ['cartItem', 'addresses', 'orders', 'orderStatus'],
 }
 
 const rootReducer = combineReducers({

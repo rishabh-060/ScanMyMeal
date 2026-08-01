@@ -162,6 +162,30 @@ const summaryApi =  {
         url : '/api/order/get-orders',
         method : 'get'
     },
+    userNotifications : {
+        url : '/api/user/notifications',
+        method : 'get'
+    },
+    readUserNotification : (id) => ({
+        url : `/api/user/notifications/${encodeURIComponent(id)}/read`,
+        method : 'patch'
+    }),
+    readAllUserNotifications : {
+        url : '/api/user/notifications/read-all',
+        method : 'patch'
+    },
+    orderDetails : (orderId) => ({
+        url : `/api/order/${encodeURIComponent(orderId)}`,
+        method : 'get'
+    }),
+    resolveTable : (publicId) => ({
+        url : `/api/tables/resolve/${encodeURIComponent(publicId)}`,
+        method : 'get'
+    }),
+    activeBanners : {
+        url : '/api/banners/active',
+        method : 'get'
+    },
     upcomingOrders : {
         url : '/api/admin/upcoming-orders',
         method : 'get'
@@ -193,7 +217,107 @@ const summaryApi =  {
     manageOrder : {
         url : '/api/admin/manage-order',
         method : 'post'
-    }
+    },
+    adminTables : {
+        url : '/api/admin/tables',
+        method : 'get'
+    },
+    createTable : {
+        url : '/api/admin/tables',
+        method : 'post'
+    },
+    updateTable : (publicId) => ({
+        url : `/api/admin/tables/${encodeURIComponent(publicId)}`,
+        method : 'patch'
+    }),
+    deleteTable : (publicId) => ({
+        url : `/api/admin/tables/${encodeURIComponent(publicId)}`,
+        method : 'delete'
+    }),
+    adminBanners : {
+        url : '/api/admin/banners',
+        method : 'get'
+    },
+    createBanner : {
+        url : '/api/admin/banners',
+        method : 'post'
+    },
+    updateBanner : (id) => ({
+        url : `/api/admin/banners/${encodeURIComponent(id)}`,
+        method : 'patch'
+    }),
+    deleteBanner : (id) => ({
+        url : `/api/admin/banners/${encodeURIComponent(id)}`,
+        method : 'delete'
+    }),
+    reorderBanners : {
+        url : '/api/admin/banners/reorder',
+        method : 'patch'
+    },
+    setBannerStatus : (id) => ({
+        url : `/api/admin/banners/${encodeURIComponent(id)}/status`,
+        method : 'patch'
+    }),
+    adminInventory : {
+        url : '/api/admin/inventory',
+        method : 'get'
+    },
+    adjustInventory : (productId) => ({
+        url : `/api/admin/inventory/${encodeURIComponent(productId)}/adjust`,
+        method : 'post'
+    }),
+    adminAccess : {
+        url : '/api/admin/access',
+        method : 'get'
+    },
+    adminDashboardSummary : {
+        url : '/api/admin/dashboard-summary',
+        method : 'get'
+    },
+    updateAdminAccess : (userId) => ({
+        url : `/api/admin/access/users/${encodeURIComponent(userId)}`,
+        method : 'patch'
+    }),
+    adminOffers : {
+        url : '/api/admin/offers',
+        method : 'get'
+    },
+    createOffer : {
+        url : '/api/admin/offers',
+        method : 'post'
+    },
+    updateOffer : (id) => ({
+        url : `/api/admin/offers/${encodeURIComponent(id)}`,
+        method : 'patch'
+    }),
+    setOfferStatus : (id) => ({
+        url : `/api/admin/offers/${encodeURIComponent(id)}/status`,
+        method : 'patch'
+    }),
+    deleteOffer : (id) => ({
+        url : `/api/admin/offers/${encodeURIComponent(id)}`,
+        method : 'delete'
+    }),
+    adminNotifications : {
+        url : '/api/admin/notifications',
+        method : 'get'
+    },
+    createNotification : {
+        url : '/api/admin/notifications',
+        method : 'post'
+    },
+    markNotificationRead : (id) => ({
+        url : `/api/admin/notifications/${encodeURIComponent(id)}/read`,
+        method : 'patch'
+    }),
+    markAllNotificationsRead : {
+        url : '/api/admin/notifications/read-all',
+        method : 'patch'
+    },
+    deleteNotification : (id) => ({
+        url : `/api/admin/notifications/${encodeURIComponent(id)}`,
+        method : 'delete'
+    })
 }
 
 

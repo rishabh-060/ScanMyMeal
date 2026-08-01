@@ -1,12 +1,11 @@
-import React from 'react'
+import { Skeleton } from './ui'
 
-const CardLoading = () => {
-  return (
-        <div className="w-38 bg-white rounded-lg p-2 min-h-36 max-h-66 grid gap-1.5 hover:shadow-lg shrink-0 cursor-pointer animate-pulse transition-transform duration-150">
-            <div className="bg-amber-100 rounded min-h-20"></div>
-            <div className="bg-amber-100 rounded min-h-8"></div>
-        </div>
-  )
-}
+const CardLoading = () => (
+  <div className="w-52 shrink-0 rounded-[var(--radius-card)] border border-black/[0.06] bg-white p-3 shadow-sm">
+    <Skeleton className="h-36 w-full" />
+    <Skeleton className="mt-4 h-4 w-4/5" />
+    <Skeleton className="mt-3 h-9 w-full" />
+  </div>
+)
 
 export default CardLoading

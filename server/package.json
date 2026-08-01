@@ -5,8 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "tsc"
+    "dev": "node --watch server.js",
+    "build": "node scripts/check-source.js",
+    "lint": "node scripts/check-source.js",
+    "test": "node --test tests/*.test.js",
+    "migrate:orders": "node scripts/migrate-orders-v2.js"
   },
   "keywords": [
     "food-ordering",
@@ -24,20 +27,20 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.0",
-    "cloudinary": "^2.5.0",
+    "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "express": "^4.22.2",
     "helmet": "^8.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.10.1",
-    "morgan": "^1.10.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.1",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.10.0",
+    "nodemailer": "^9.0.3",
+    "redis": "^5.8.0",
     "stripe": "^18.1.1"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+  "overrides": {
+    "path-to-regexp": "^0.1.13"
   }
 }
