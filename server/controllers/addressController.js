@@ -25,7 +25,7 @@ const addAddressController = asyncHandler(async (req, res) => {
 })
 
 const getAddressController = asyncHandler(async (req, res) => {
-  const addresses = await addressModel.find({ userId: req.userId }).sort({ createdAt: -1 })
+  const addresses = await addressModel.find({ userId: req.userId, status: true }).sort({ createdAt: -1 })
   return res.json({ success: true, error: false, message: 'Addresses fetched successfully', data: addresses })
 })
 
@@ -40,10 +40,9 @@ const updateAddressController = asyncHandler(async (req, res) => {
 })
 
 const removeAddressController = asyncHandler(async (req, res) => {
-  const address = await addressModel.findOneAndUpdate(
+  const address = await addressModel.softDeleteOne(
     { _id: req.body._id, userId: req.userId, status: true },
-    { $set: { status: false } },
-    { new: true },
+    { deletedBy: req.userId, set: { status: false } },
   )
   if (!address) throw new AppError('Address not found or already removed', 404, 'ADDRESS_NOT_FOUND')
   return res.json({ success: true, error: false, message: 'Address removed successfully' })

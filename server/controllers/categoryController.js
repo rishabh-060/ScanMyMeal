@@ -129,7 +129,17 @@ const deleteCategoryController = async (req, res) => {
             })
         }
 
-        const deleteCategory = await categoryModel.deleteOne({ _id : _id})
+        const deleteCategory = await categoryModel.softDeleteOne(
+            { _id : _id },
+            { deletedBy : req.userId }
+        )
+        if (!deleteCategory) {
+            return res.status(404).json({
+                message : "Category not found or already deleted",
+                success : false,
+                error : true
+            })
+        }
         await cache.removeByPattern('menu:*')
 
         return res.status(200).json({

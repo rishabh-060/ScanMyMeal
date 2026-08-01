@@ -1,5 +1,6 @@
 const { randomUUID } = require('crypto')
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 
 const tableSchema = new mongoose.Schema({
   publicId: { type: String, default: randomUUID, unique: true, immutable: true, index: true },
@@ -20,5 +21,7 @@ tableSchema.pre('validate', function syncLegacyFields(next) {
   if (this.status === false) this.isActive = false
   next()
 })
+
+tableSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('table', tableSchema)

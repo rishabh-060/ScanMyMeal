@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 
 const bannerSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true, maxlength: 120 },
@@ -20,5 +21,6 @@ const bannerSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 bannerSchema.index({ isActive: 1, displayOrder: 1, startAt: 1, endAt: 1 })
+bannerSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('banner', bannerSchema)

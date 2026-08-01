@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 
 const notificationSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true, maxlength: 120 },
@@ -12,6 +13,6 @@ const notificationSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 notificationSchema.index({ audience: 1, createdAt: -1 })
-notificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0, sparse: true })
+notificationSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('notification', notificationSchema)

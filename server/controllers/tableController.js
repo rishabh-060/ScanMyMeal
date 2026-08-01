@@ -24,13 +24,23 @@ const createTableController = asyncHandler(async (req, res) => {
   if (!tableNumber || tableNumber.length > 30) {
     throw new AppError('A valid table number is required', 400, 'INVALID_TABLE_NUMBER')
   }
-  const table = await tableModel.create({
+  const deletedTable = await tableModel.findOne({
     tableNumber,
-    table_no: tableNumber,
     restaurant: restaurantId(),
-    userId: req.userId,
-  })
-  return res.status(201).json({ success: true, error: false, message: 'Table created', data: table })
+    isDeleted: true,
+  }).withDeleted()
+  const table = deletedTable
+    ? await tableModel.restoreOne(
+      { _id: deletedTable._id },
+      { set: { table_no: tableNumber, status: true, userId: req.userId } },
+    )
+    : await tableModel.create({
+      tableNumber,
+      table_no: tableNumber,
+      restaurant: restaurantId(),
+      userId: req.userId,
+    })
+  return res.status(201).json({ success: true, error: false, message: deletedTable ? 'Table restored' : 'Table created', data: table })
 })
 
 const updateTableController = asyncHandler(async (req, res) => {
@@ -55,10 +65,9 @@ const updateTableController = asyncHandler(async (req, res) => {
 })
 
 const deleteTableController = asyncHandler(async (req, res) => {
-  const table = await tableModel.findOneAndUpdate(
+  const table = await tableModel.softDeleteOne(
     { publicId: req.params.publicId, restaurant: restaurantId() },
-    { $set: { isActive: false, status: false } },
-    { new: true },
+    { deletedBy: req.userId, set: { status: false } },
   )
   if (!table) throw new AppError('Table not found', 404, 'TABLE_NOT_FOUND')
   return res.json({ success: true, error: false, message: 'Table deactivated', data: table })

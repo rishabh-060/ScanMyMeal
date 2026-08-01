@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const softDeletePlugin = require('./plugins/softDeletePlugin')
 
 const cartSchema = new mongoose.Schema({
     product : {
@@ -19,5 +20,6 @@ const cartSchema = new mongoose.Schema({
 })
 
 cartSchema.index({ userId: 1, product: 1 }, { unique: true })
+cartSchema.plugin(softDeletePlugin)
 
 module.exports = mongoose.model('cartProduct', cartSchema)

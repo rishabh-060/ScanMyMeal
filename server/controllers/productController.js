@@ -21,13 +21,13 @@ const queryProducts = async ({ baseQuery = {}, search = '', sort = { createdAt: 
         if (!isMissingTextIndexError(error)) throw error
 
         const pattern = escapeRegex(search)
-        return run({
-            ...baseQuery,
+        const searchQuery = {
             $or: [
                 { name: { $regex: pattern, $options: 'i' } },
                 { description: { $regex: pattern, $options: 'i' } }
             ]
-        })
+        }
+        return run(Object.keys(baseQuery).length ? { $and: [baseQuery, searchQuery] } : searchQuery)
     }
 }
 
@@ -69,7 +69,7 @@ const createProductController = async (req, res) => {
 
 const getAllProductsController = async (req, res) => {
     try {
-        let { page, limit, search } = req.body
+        let { page, limit, search, status, sort } = req.body
 
         if(!page){
             page = 1
@@ -83,14 +83,40 @@ const getAllProductsController = async (req, res) => {
 
         const skip = (limit * (page - 1))
         search = String(search || '').trim()
-        const [data, totalCount] = await queryProducts({ search, skip, limit })
+        status = String(status || 'all').toLowerCase()
+        const baseQuery = status === 'available'
+            ? { publish: { $ne: false }, isAvailable: { $ne: false }, stock: { $gt: 0 } }
+            : status === 'low_stock'
+                ? { publish: { $ne: false }, stock: { $gt: 0, $lte: 5 } }
+                : status === 'out_of_stock'
+                    ? { $or: [{ stock: { $lte: 0 } }, { isAvailable: false }] }
+                    : status === 'hidden'
+                        ? { publish: false }
+                        : {}
+        const sortOptions = {
+            newest: { createdAt: -1 },
+            oldest: { createdAt: 1 },
+            name_asc: { name: 1 },
+            price_low: { price: 1 },
+            price_high: { price: -1 },
+            stock_low: { stock: 1 },
+        }
+        const selectedSort = sortOptions[String(sort || 'newest')] || sortOptions.newest
+        const [[data, totalCount], statsResult] = await Promise.all([
+            queryProducts({ baseQuery, search, sort: selectedSort, skip, limit }),
+            productModel.aggregate([{ $group: { _id: null, total: { $sum: 1 }, available: { $sum: { $cond: [{ $and: [{ $ne: ['$publish', false] }, { $ne: ['$isAvailable', false] }, { $gt: ['$stock', 0] }] }, 1, 0] } }, lowStock: { $sum: { $cond: [{ $and: [{ $ne: ['$publish', false] }, { $gt: ['$stock', 0] }, { $lte: ['$stock', 5] }] }, 1, 0] } }, outOfStock: { $sum: { $cond: [{ $or: [{ $lte: ['$stock', 0] }, { $eq: ['$isAvailable', false] }] }, 1, 0] } }, hidden: { $sum: { $cond: [{ $eq: ['$publish', false] }, 1, 0] } } } }]),
+        ])
+        const stats = statsResult[0] || { total: 0, available: 0, lowStock: 0, outOfStock: 0, hidden: 0 }
 
         if(!data || data.length === 0) {
             return res.status(200).json({
                 success : true,
                 error : false,
                 message : "No Product Found",
-                data : []
+                data : [],
+                totalCount,
+                totalNoPage : Math.ceil(totalCount / limit),
+                stats,
             })
         }
 
@@ -99,7 +125,8 @@ const getAllProductsController = async (req, res) => {
             error : false,
             totalCount : totalCount,
             totalNoPage : Math.ceil(totalCount / limit),
-            data : data
+            data : data,
+            stats,
         })
     } catch (error) {
         return res.status(500).json({
@@ -279,7 +306,13 @@ const deleteProductController = async (req, res) => {
             })
         }
 
-        const item = await productModel.findByIdAndDelete({ _id : _id })
+        const item = await productModel.softDeleteOne(
+            { _id : _id },
+            {
+                deletedBy : req.userId,
+                set : { publish : false, isAvailable : false }
+            }
+        )
 
         if( item ){
             await cache.removeByPattern('menu:*')

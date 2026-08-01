@@ -8,8 +8,8 @@ export default function DashboardLayout({ children }) {
   const user = useSelector((state) => state.user)
   if (!user?.id) return <RestrictUser />
   return (
-    <main className="page-container py-6 lg:py-10">
-      <div className="mb-5 overflow-x-auto rounded-2xl border border-black/[0.06] bg-white p-2 shadow-sm lg:hidden"><UserMenu compact /></div>
+    <main className="page-container py-4 sm:py-6 lg:py-10">
+      <div className="no-scrollbar mb-5 overflow-x-auto rounded-2xl border border-black/[0.06] bg-white p-2 shadow-sm lg:hidden"><UserMenu mobileNav /></div>
       <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="sticky top-24 hidden h-fit rounded-[var(--radius-card)] border border-black/[0.06] bg-white p-3 shadow-[var(--shadow-card)] lg:block"><UserMenu /></aside>
         <section className="min-w-0">{children}</section>

@@ -7,7 +7,7 @@ const { addToCartController } = require('../controllers/cartController')
 
 test('add to cart accepts legacy products without an isAvailable field when stock exists', { concurrency: false }, async () => {
   const originalFindOne = productModel.findOne
-  const originalExists = cartModel.exists
+  const originalCartFindOne = cartModel.findOne
   const originalCreate = cartModel.create
   const originalUpdateOne = userModel.updateOne
   let productQuery
@@ -16,7 +16,7 @@ test('add to cart accepts legacy products without an isAvailable field when stoc
     productQuery = query
     return { _id: 'product-1', publish: true, stock: 3 }
   }
-  cartModel.exists = async () => false
+  cartModel.findOne = () => ({ withDeleted: async () => null })
   cartModel.create = async (data) => ({ _id: 'cart-1', ...data })
   userModel.updateOne = async () => ({ modifiedCount: 1 })
 
@@ -39,7 +39,7 @@ test('add to cart accepts legacy products without an isAvailable field when stoc
     assert.deepEqual(productQuery.stock, { $gte: 1 })
   } finally {
     productModel.findOne = originalFindOne
-    cartModel.exists = originalExists
+    cartModel.findOne = originalCartFindOne
     cartModel.create = originalCreate
     userModel.updateOne = originalUpdateOne
   }

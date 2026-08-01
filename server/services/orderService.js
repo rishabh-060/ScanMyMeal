@@ -134,7 +134,7 @@ const decrementInventory = async (items, orderId, session) => {
 
 const clearCart = async (userId, session) => {
   await Promise.all([
-    cartModel.deleteMany({ userId }, withSession(session)),
+    cartModel.softDeleteMany({ userId }, { deletedBy: userId, session }),
     userModel.updateOne({ _id: userId }, { $set: { shopping_cart: [] } }, withSession(session)),
   ])
 }

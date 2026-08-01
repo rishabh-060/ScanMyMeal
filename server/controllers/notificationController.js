@@ -42,7 +42,10 @@ const markAllNotificationsReadController = asyncHandler(async (req, res) => {
 })
 
 const deleteNotificationController = asyncHandler(async (req, res) => {
-  const notification = await notificationModel.findByIdAndDelete(req.params.id)
+  const notification = await notificationModel.softDeleteOne(
+    { _id: req.params.id },
+    { deletedBy: req.userId },
+  )
   if (!notification) throw new AppError('Notification not found', 404, 'NOTIFICATION_NOT_FOUND')
   return res.json({ success: true, error: false, message: 'Notification deleted' })
 })
