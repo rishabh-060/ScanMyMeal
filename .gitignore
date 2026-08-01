@@ -3,6 +3,8 @@
 
 # Next.js build output
 frontend/.next/
+frontend/.next-dev/
+frontend/.next-build/
 frontend/out/
 
 # Production build
@@ -32,3 +34,4 @@ server/node_modules/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+/tmp

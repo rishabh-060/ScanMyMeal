@@ -16,22 +16,15 @@ export const metadata = {
   icons: {
     icon: "/assets/favicon.png",
     apple: "/assets/favicon.png",
-    android: "/assets/favicon.png",
-    other: [
-      { rel: "icon", url: "/favicon-16x16.png", sizes: "16x16" },
-      { rel: "icon", url: "/favicon-32x32.png", sizes: "32x32" },
-      { rel: "icon", url: "/favicon-96x96.png", sizes: "96x96" },
-      { rel: "icon", url: "/favicon-128x128.png", sizes: "128x128" },
-    ],
+    other: [{ rel: "icon", url: "/assets/favicon.png" }],
   },
 };
 
 
-export default function layout({ children }) {
-
+export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="select-none p-0 m-0">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body className="select-none p-0 m-0" suppressHydrationWarning>
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>

@@ -75,7 +75,6 @@ const EditProduct = ({ close, prData, fetchProducts }) => {
   
       setLoadingImage(true)
       const response = await uploadImage(file)
-      console.log('response', response)
       if(response.error){
         return toast.error(response?.message)
       }

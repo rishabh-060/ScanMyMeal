@@ -1,10 +1,41 @@
 const productModel = require('../models/productModel')
+const cache = require('../services/cacheService')
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const isMissingTextIndexError = (error) => (
+    error?.code === 27 || /text index required/i.test(error?.message || '')
+)
+
+const queryProducts = async ({ baseQuery = {}, search = '', sort = { createdAt: -1 }, skip, limit }) => {
+    const run = (query) => Promise.all([
+        productModel.find(query).sort(sort).skip(skip).limit(limit).populate('category subCategory'),
+        productModel.countDocuments(query)
+    ])
+
+    if (!search) return run(baseQuery)
+
+    try {
+        return await run({ ...baseQuery, $text: { $search: search } })
+    } catch (error) {
+        if (!isMissingTextIndexError(error)) throw error
+
+        const pattern = escapeRegex(search)
+        return run({
+            ...baseQuery,
+            $or: [
+                { name: { $regex: pattern, $options: 'i' } },
+                { description: { $regex: pattern, $options: 'i' } }
+            ]
+        })
+    }
+}
 
 const createProductController = async (req, res) => {
     try {
         const { name, description, image, category, SubCategory, unit, stock, price, discount, more_details } = req.body
 
-        if( !name || !description || !image[0] || !category[0] || !SubCategory[0] || !unit || !stock || !price || !discount ) {
+        if( !name || !description || !Array.isArray(image) || !image[0] || !Array.isArray(category) || !category[0] || !Array.isArray(SubCategory) || !SubCategory[0] || !unit || Number(stock) < 0 || Number(price) < 0 || Number(discount) < 0 || Number(discount) > 100 ) {
             return res.status(400).json({
                 success : false,
                 error : true,
@@ -15,10 +46,12 @@ const createProductController = async (req, res) => {
         let subCategory = SubCategory
 
         const product = new productModel({
-            name, description, image, category, subCategory, unit, stock, price, discount, more_details
+            name, description, image, category, subCategory, unit, stock, price, discount, more_details,
+            isAvailable: Number(stock) > 0
         })
 
         const saveProduct = await product.save()
+        await cache.removeByPattern('menu:*')
 
         return res.status(200).json({
             success : true,
@@ -45,18 +78,12 @@ const getAllProductsController = async (req, res) => {
         if(!limit){
             limit = 25
         }
+        page = Math.max(1, Number.parseInt(page, 10) || 1)
+        limit = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 25))
 
         const skip = (limit * (page - 1))
-        const searchQuery = search ? { 
-            $text : {
-                $search : search
-            }
-         } : {}
-
-        const [data, totalCount] = await Promise.all([
-            productModel.find(searchQuery).sort({createdAt : -1}).skip(skip).limit(limit).populate('category subCategory'),
-            productModel.countDocuments(searchQuery)
-        ])
+        search = String(search || '').trim()
+        const [data, totalCount] = await queryProducts({ search, skip, limit })
 
         if(!data || data.length === 0) {
             return res.status(200).json({
@@ -95,9 +122,13 @@ const getProductByCategoryController = async (req, res) => {
             })
         }
 
+        const cacheKey = `menu:default:category:${id}`
+        const cached = await cache.getJson(cacheKey)
+        if (cached) return res.status(200).json({ success: true, error: false, data: cached, cached: true })
         const product = await productModel.find({
-            category : { $in : id }
-        }).limit(15)
+            category : { $in : id },
+            publish: true
+        }).limit(15).lean()
 
         if(!product) {
             return res.status(400).json({
@@ -107,6 +138,7 @@ const getProductByCategoryController = async (req, res) => {
             })
         }
 
+        await cache.setJson(cacheKey, product, 180)
         return res.status(200).json({
             success : true,
             error : false,
@@ -137,7 +169,8 @@ const getProductbySubcategory = async (req, res) => {
 
         const query = {
             category : { $in : category },
-            subCategory : { $in : subCategory }
+            subCategory : { $in : subCategory },
+            publish: true
         }
 
         const [data, dataCount] = await Promise.all([
@@ -178,7 +211,7 @@ const getProductDetailsController = async (req, res) => {
     try {
         const { productId } = req.body
 
-        const product = await productModel.findOne({ _id : productId})
+        const product = await productModel.findOne({ _id : productId, publish: true })
 
         if(!product) {
             return res.status(404).json({
@@ -215,9 +248,11 @@ const updateProductController = async (req, res) => {
             })
         }
 
-        const updateProduct = await productModel.updateOne({ _id : _id },{
-            ...req.body
-        })
+        const allowed = ['name', 'description', 'image', 'category', 'subCategory', 'unit', 'stock', 'price', 'discount', 'more_details', 'publish', 'isAvailable']
+        const updates = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)))
+        if (updates.stock !== undefined && updates.isAvailable === undefined) updates.isAvailable = Number(updates.stock) > 0
+        const updateProduct = await productModel.updateOne({ _id : _id }, { $set: updates }, { runValidators: true })
+        await cache.removeByPattern('menu:*')
 
         return res.json({
             message : "Product updated successfully",
@@ -247,6 +282,7 @@ const deleteProductController = async (req, res) => {
         const item = await productModel.findByIdAndDelete({ _id : _id })
 
         if( item ){
+            await cache.removeByPattern('menu:*')
             return res.status(200).json({
                 message : "Product Deleted Successfully",
                 success : true,
@@ -272,26 +308,29 @@ const deleteProductController = async (req, res) => {
 const searchProductController = async (req, res) => {
     try {
         let {search, page =1, limit=12 } = req.body
-
-        const query = search ? {
-            $text : {
-                $search : search
-            }
-        } : {}
+        page = Math.max(1, Number.parseInt(page, 10) || 1)
+        limit = Math.min(48, Math.max(1, Number.parseInt(limit, 10) || 12))
+        search = String(search || '').trim()
 
         const skip = (page - 1) * limit
 
-        const [data, dataCount] = await Promise.all([
-            productModel.find(query).sort({createdAt : -1}).skip(skip).limit(limit).populate('category subCategory'),
-            productModel.countDocuments(query)
-        ])
+        const [data, dataCount] = await queryProducts({
+            baseQuery: { publish: true },
+            search,
+            skip,
+            limit
+        })
 
         if(!data || data.length === 0) {
             return res.status(200).json({
                 message : "No Product Found",
                 error : false,
                 success : true,
-                data : []
+                data : [],
+                totalCount: 0,
+                totalPage: 0,
+                page,
+                limit
             })
         }
 

@@ -1,6 +1,7 @@
 const categoryModel = require('../models/categoryModel')
 const subCategoryModel = require('../models/subCategoryModel')
 const productModel = require('../models/productModel')
+const cache = require('../services/cacheService')
 
 
 // Add new category controller
@@ -22,6 +23,7 @@ const addCategoryController = async (req, res) => {
         })
 
         const saveCategory = await addCategory.save()
+        await cache.removeByPattern('menu:*')
 
         if(!saveCategory){
             return res.status(500).json({
@@ -86,6 +88,7 @@ const updateCategoryController = async (req, res) => {
             name,
             image
         })
+        await cache.removeByPattern('menu:*')
 
         return res.status(200).json({
             message : "Updated Successfully",
@@ -127,6 +130,7 @@ const deleteCategoryController = async (req, res) => {
         }
 
         const deleteCategory = await categoryModel.deleteOne({ _id : _id})
+        await cache.removeByPattern('menu:*')
 
         return res.status(200).json({
             message : "Category Deleted Successfully",

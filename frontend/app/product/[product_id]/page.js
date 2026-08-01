@@ -1,210 +1,78 @@
 'use client'
+
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { ArrowLeft, Clock3, PackageCheck, ShieldCheck, Sparkles, UtensilsCrossed } from 'lucide-react'
+import { toast } from 'react-toastify'
 import AddToCartButton from '@/Components/AddToCartButton'
-import Divider from '@/Components/Divider'
+import { Card, EmptyState, Skeleton, StatusBadge } from '@/Components/ui'
 import summaryApi from '@/public/common/summaryApi'
 import Axios from '@/public/utils/Axios'
 import { DiscountedPrice } from '@/public/utils/DiscountedPrice'
-import { useParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
 
-const page = () => {
+const ProductOverview = () => {
   const params = useParams()
-  const productId = params?.product_id.split('-')?.slice(-1)
-
-  const [data, setData] = useState({
-    name: '',
-    image: [],
-    unit: '',
-    stock: 0,
-    price: null,
-    discount: null,
-    description: '',
-    more_details: {},
-  })
-  const [image, setImage] = useState(0)
-  const [loading, setLoading] = useState(false)
-
-  const fetchProductDetails = async () => {
-    setLoading(true)
-    try {
-      const response = await Axios({
-        ...summaryApi.getProductDetails,
-        data: {
-          productId,
-        },
-      })
-
-      const { data: responseData } = response
-      if (responseData.success) {
-        setData(responseData.data)
-      }
-    } catch (error) {
-      toast.error(error?.data?.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const productId = String(params?.product_id || '').split('-').at(-1)
+  const [data, setData] = useState(null)
+  const [activeImage, setActiveImage] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchProductDetails()
-  }, [params])
+    if (!productId) return
+    let mounted = true
+    setLoading(true); setError('')
+    Axios({ ...summaryApi.getProductDetails, data: { productId } })
+      .then((response) => mounted && setData(response.data.data))
+      .catch((requestError) => {
+        const message = requestError.response?.data?.message || 'This menu item could not be loaded.'
+        if (mounted) setError(message)
+        toast.error(message)
+      })
+      .finally(() => mounted && setLoading(false))
+    return () => { mounted = false }
+  }, [productId])
+
+  if (loading) return <main className="page-container grid gap-6 py-8 lg:grid-cols-[1.15fr_0.85fr]"><Skeleton className="h-[34rem]" /><div className="grid content-start gap-4"><Skeleton className="h-12 w-3/4" /><Skeleton className="h-28" /><Skeleton className="h-56" /></div></main>
+  if (error || !data) return <main className="page-container py-10"><EmptyState title="Item unavailable" description={error || 'This item may have been removed from the menu.'} action={<Link href="/" className="font-bold text-[var(--color-primary)]">Return to the menu</Link>} /></main>
+
+  const images = data.image?.filter(Boolean) || []
+  const price = DiscountedPrice(data.price, data.discount)
+  const available = data.publish !== false && data.isAvailable !== false && Number(data.stock || 0) > 0
+  const details = Object.entries(data.more_details || {}).filter(([, value]) => value !== '' && value != null)
 
   return (
-    <section className="container w-full min-h-[65vh] lg:min-h-[68vh] py-5 mx-auto px-4">
-      <div className="grid w-full h-full lg:grid-cols-3 gap-6">
-        {/* Image Section */}
-        <div className="col-span-2">
-          <div className="rounded bg-white min-h-56 lg:min-h-[70vh] lg:max-h-[70vh] max-h-56 w-full h-full py-2 overflow-hidden group">
-            <img
-              src={data.image[image]}
-              className="w-full h-full object-contain rounded transition-transform duration-500 ease-in-out group-hover:scale-105"
-              alt={data.name}
-            />
-          </div>
-
-          <div className="flex items-center justify-center gap-3 w-full bg-white h-fit p-3 rounded mt-2">
-            {data.image.map((img, index) => (
-              <button
-                key={index + 'dot'}
-                onClick={() => setImage(index)}
-                className={`h-3.5 w-3.5 rounded-full border-2 transition-all duration-300 ${
-                  index === image
-                    ? 'bg-amber-500 border-amber-600 scale-110'
-                    : 'bg-amber-100 border-gray-300'
-                }`}
-              ></button>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-start gap-3 w-full h-fit p-3 rounded overflow-x-auto">
-            {data.image.map((img, index) => (
-              <div
-                key={index + 'thumb'}
-                onClick={() => setImage(index)}
-                className="h-20 w-20 rounded-lg overflow-hidden shadow-md cursor-pointer border-2 hover:border-amber-400 transition-all duration-300 hover:scale-105"
-              >
-                <img
-                  src={img}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Product Details Section */}
-        <div className="p-4 lg:p-6 bg-white rounded h-fit w-full lg:shadow-sm">
-          <p className="bg-green-300 w-fit px-3.5 text-xs text-emerald-900 py-1 font-medium rounded-full">
-            15 min
-          </p>
-          <h2 className="text-lg font-medium md:text-xl lg:text-2xl lg:font-semibold text-amber-700 mt-2">
-            {data.name}
-          </h2>
-          <p className="text-sm lg:text-base font-medium text-neutral-700">{data.unit}</p>
-
-          <Divider />
-
-          <div className="flex flex-wrap items-center gap-4 py-2">
-            <p className="text-base lg:text-lg text-amber-900 font-semibold">Price:</p>
-
-            <div className="bg-amber-200 px-5 py-1 rounded-full">
-              <p className="text-base lg:text-lg text-amber-900 font-bold">
-                ₹{DiscountedPrice(data.price, data.discount)}
-              </p>
+    <main className="page-container py-6 sm:py-9">
+      <Link href="/" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[var(--color-muted)] hover:text-[var(--color-primary)]"><ArrowLeft size={17} /> Back to menu</Link>
+      <div className="grid items-start gap-7 lg:grid-cols-[1.12fr_0.88fr]">
+        <section>
+          <Card className="overflow-hidden p-3 sm:p-4">
+            <div className="relative h-[22rem] overflow-hidden rounded-[1.5rem] bg-[var(--color-surface-soft)] sm:h-[32rem]">
+              {images[activeImage] ? <img src={images[activeImage]} alt={data.name} className="h-full w-full object-cover transition duration-500" /> : <div className="grid h-full place-items-center text-[var(--color-muted)]"><UtensilsCrossed size={48} /></div>}
+              {Number(data.discount || 0) > 0 && <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[#19221d] px-3 py-2 text-xs font-black uppercase tracking-wide text-white"><Sparkles size={14} /> {data.discount}% off</span>}
             </div>
+          </Card>
+          {images.length > 1 && <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-2">{images.map((src, index) => <button key={src} onClick={() => setActiveImage(index)} aria-label={`View image ${index + 1}`} aria-pressed={activeImage === index} className={`h-20 w-24 shrink-0 overflow-hidden rounded-2xl border-2 bg-white p-1 transition ${activeImage === index ? 'border-[var(--color-primary)] shadow-md' : 'border-transparent opacity-70 hover:opacity-100'}`}><img src={src} alt="" className="h-full w-full rounded-xl object-cover" /></button>)}</div>}
+        </section>
 
-            {data.discount > 0 && (
-              <>
-                <h2 className="text-sm lg:text-base text-neutral-500 font-medium line-through">
-                  ₹{data.price}
-                </h2>
-                <span className="text-xs lg:text-sm text-red-600 font-semibold bg-red-100 px-2 py-0.5 rounded-full">
-                  -{data.discount}%
-                </span>
-              </>
-            )}
+        <Card className="sticky top-24 overflow-hidden">
+          <div className="p-5 sm:p-7">
+            <div className="flex flex-wrap items-center gap-2"><StatusBadge value={available ? 'AVAILABLE' : 'OUT OF STOCK'} /><span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"><Clock3 size={13} /> Freshly prepared</span></div>
+            <h1 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-[var(--color-text)] sm:text-4xl">{data.name}</h1>
+            <p className="mt-2 font-semibold text-[var(--color-muted)]">{data.unit}</p>
+            <p className="mt-5 text-sm leading-7 text-[var(--color-muted)]">{data.description || 'Prepared fresh and ready to add to your order.'}</p>
+            <div className="my-6 flex items-end justify-between gap-4 border-y border-black/[0.06] py-5"><div><p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--color-muted)]">Your price</p><div className="mt-1 flex items-baseline gap-2"><strong className="text-3xl tracking-tight">₹{price}</strong>{Number(data.discount || 0) > 0 && <span className="text-sm font-semibold text-neutral-400 line-through">₹{data.price}</span>}</div></div>{available && <span className="text-xs font-semibold text-emerald-700">{data.stock} in stock</span>}</div>
+            {available ? <div className="[&_button]:min-h-12 [&_button]:min-w-32 [&_button]:text-base"><AddToCartButton data={data} /></div> : <div className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">This item is temporarily unavailable. Check back soon.</div>}
           </div>
-
-            {/* // <button className="px-6 py-2 bg-amber-500 w-full text-white rounded-lg hover:bg-amber-700 hover:scale-105 transition-all">
-            //   Add to Cart
-            // </button> */}
-
-          <div className="py-4">
-            {data?.stock !== 0 ? (
-              <AddToCartButton data={data}/>
-            ) : (
-              <p className="text-sm lg:text-base font-semibold text-red-600">Out of Stock</p>
-            )}
+          <div className="grid gap-3 border-t border-black/[0.06] bg-[var(--color-surface-soft)]/60 p-5 sm:grid-cols-3">
+            {[['Made fresh', UtensilsCrossed], ['Secure checkout', ShieldCheck], ['Live availability', PackageCheck]].map(([label, Icon]) => <div key={label} className="flex items-center gap-2 text-xs font-bold text-[var(--color-muted)]"><Icon size={17} className="text-[var(--color-secondary)]" />{label}</div>)}
           </div>
-
-            {/* description */}
-          <div className="my-2 lg:my-4">
-            <p className="font-medium text-amber-800 text-sm lg:text-base my-2">Description</p>
-            <p className="font-medium text-xs lg:text-sm text-neutral-600 ">{data.description}</p>
-          </div>
-
-
-          <h2 className="font-medium text-amber-800 text-sm lg:text-base my-3">Why order with us?</h2>
-          <div className="grid gap-4">
-            {[
-              {
-                img: 'https://c7.alamy.com/comp/HNPDH1/booking-ticket-online-reservation-icon-HNPDH1.jpg',
-                title: 'Hassle-free Booking',
-                desc: 'Don\'t wait in queue! Place your order earliest.',
-              },
-              {
-                img: 'https://as1.ftcdn.net/v2/jpg/10/56/63/04/1000_F_1056630441_rFUQeTju3EfpVDS9bfn8f1he5cHsrCDi.jpg',
-                title: 'Save Your Time',
-                desc: 'Reduce time by placing order effortlessly.',
-              },
-              {
-                img: 'https://static.vecteezy.com/system/resources/previews/014/435/767/non_2x/best-deal-badge-icon-best-deal-banners-badge-sticker-sign-tag-best-offer-modern-style-illustration-vector.jpg',
-                title: 'Get best deals.',
-                desc: 'Stay updated with current running offers.',
-              },
-            ].map((benefit, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 hover:scale-105 transition-transform duration-300"
-              >
-                <img
-                  src={benefit.img}
-                  alt={benefit.title}
-                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover"
-                />
-                <div>
-                  <h3 className="font-semibold text-sm lg:text-base text-neutral-800">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-xs text-gray-600">{benefit.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </Card>
       </div>
-
-      <div className="mt-6 px-2">
-        <h2 className="text-lg font-semibold text-amber-700 mb-4">More Details</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.more_details &&
-            Object.entries(data.more_details).map(([key, value], index) => (
-              <div
-                key={index + 'more-detail'}
-                className="bg-white border border-amber-200 rounded-xl shadow-sm p-4 hover:shadow-md transition duration-300"
-              >
-                <p className="text-base md:text-lg font-semibold text-amber-800 mb-1">{key}</p>
-                <p className="text-sm md:text-base text-gray-700 leading-relaxed">{value}</p>
-              </div>
-            ))}
-        </div>
-      </div>
-
-    </section>
+      {details.length > 0 && <section className="mt-10"><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--color-primary)]">Good to know</p><h2 className="mt-2 text-2xl font-black">Item details</h2></div><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{details.map(([key, value]) => <Card key={key} className="p-5"><p className="text-xs font-extrabold uppercase tracking-wide text-[var(--color-muted)]">{key}</p><p className="mt-2 font-semibold leading-6">{String(value)}</p></Card>)}</div></section>}
+    </main>
   )
 }
 
-export default page
+export default ProductOverview

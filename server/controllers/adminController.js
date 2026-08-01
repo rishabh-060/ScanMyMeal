@@ -1,341 +1,171 @@
-const { default: mongoose } = require('mongoose')
-const orderModel = require('../models/orderModel');
-const userModel = require('../models/userModel');
-const productModel = require('../models/productModel');
-const sendMail = require('../helpers/tryMailer');
-const accountSuspention = require('../templates/accountSuspention');
+const orderModel = require('../models/orderModel')
+const userModel = require('../models/userModel')
+const productModel = require('../models/productModel')
+const offerModel = require('../models/offerModel')
+const notificationModel = require('../models/notificationModel')
+const AppError = require('../utils/AppError')
+const asyncHandler = require('../utils/asyncHandler')
+const { transitionOrder } = require('../services/orderService')
+const sendMail = require('../helpers/tryMailer')
+const accountSuspention = require('../templates/accountSuspention')
+const { Stripe } = require('../config/stripe')
+const { PAYMENT_STATUSES } = require('../constants/order')
 
-const getAllOrdersController = async (req, res) => {
-  try {
-    const userId = req.userId;
+const getDashboardSummaryController = asyncHandler(async (req, res) => {
+  const restaurant = { restaurant: { $in: ['default', null] } }
+  const now = new Date()
+  const [customers, products, orders, activeOffers, unreadNotifications, lowStock, revenue] = await Promise.all([
+    userModel.countDocuments({ role: 'USER' }),
+    productModel.countDocuments(),
+    orderModel.countDocuments(restaurant),
+    offerModel.countDocuments({ isActive: true, $or: [{ startAt: null }, { startAt: { $lte: now } }], $and: [{ $or: [{ endAt: null }, { endAt: { $gt: now } }] }] }),
+    notificationModel.countDocuments({ audience: { $in: ['STAFF', 'ALL'] }, readBy: { $ne: req.userId }, $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }] }),
+    productModel.find({ stock: { $lte: 5 }, publish: true }).select('name image stock isAvailable').sort({ stock: 1 }).limit(5).lean(),
+    orderModel.aggregate([{ $match: restaurant }, { $group: { _id: null, total: { $sum: '$pricing.grandTotal' } } }]),
+  ])
+  return res.json({ success: true, error: false, data: { customers, products, orders, activeOffers, unreadNotifications, lowStock, revenue: revenue[0]?.total || 0 } })
+})
 
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    // Fetch all upcoming orders (not delivered or cancelled)
-    const upcomingOrders = await orderModel.find({
-      payment_status: { $nin: ['Paid', 'Cancelled'] },
-    })
-      .populate('userId', 'name email') 
-      .populate('productId', 'name price')
+const getAllOrdersController = asyncHandler(async (req, res) => {
+  const page = Math.max(1, Number.parseInt(req.query.page || '1', 10))
+  const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit || '25', 10)))
+  const query = { restaurant: { $in: ['default', null] } }
+  if (req.query.status) query.status = String(req.query.status).toUpperCase()
+  if (req.query.paymentStatus) query['payment.status'] = String(req.query.paymentStatus).toUpperCase()
+  if (req.query.orderType) query.orderType = String(req.query.orderType).toUpperCase()
+  if (req.query.table) query.table = req.query.table
+  if (req.query.search) query.$or = [
+    { publicOrderId: { $regex: String(req.query.search), $options: 'i' } },
+    { orderId: { $regex: String(req.query.search), $options: 'i' } },
+  ]
+  if (req.query.from || req.query.to) {
+    query.createdAt = {}
+    if (req.query.from) query.createdAt.$gte = new Date(req.query.from)
+    if (req.query.to) query.createdAt.$lte = new Date(req.query.to)
+  }
+  const [orders, total] = await Promise.all([
+    orderModel.find(query)
+      .populate('userId', 'name email mobile')
       .populate('delivery_address')
-      .populate('table_num')
-      .sort({ createdAt: -1 }); 
+      .populate('table', 'publicId tableNumber')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    orderModel.countDocuments(query),
+  ])
+  return res.json({
+    success: true,
+    error: false,
+    message: orders.length ? 'Orders fetched successfully' : 'No orders found',
+    data: orders,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  })
+})
 
-    if (!upcomingOrders || upcomingOrders.length === 0) {
-      return res.status(200).json({
-        error: false,
-        success: true,
-        message: 'No upcoming orders found.',
-        data: [],
-      });
-    }
+const getAllUsersController = asyncHandler(async (req, res) => {
+  const page = Math.max(1, Number.parseInt(req.query.page || '1', 10))
+  const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit || '25', 10)))
+  const query = req.query.search
+    ? { $or: [
+      { name: { $regex: req.query.search, $options: 'i' } },
+      { email: { $regex: req.query.search, $options: 'i' } },
+    ] }
+    : {}
+  const [users, total] = await Promise.all([
+    userModel.find(query).select('name avatar email mobile role permissions status createdAt last_login_date').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    userModel.countDocuments(query),
+  ])
+  return res.json({ success: true, error: false, data: users, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
+})
 
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'Upcoming orders fetched successfully',
-      data: upcomingOrders,
-    });
+const getAllProductsLengthController = asyncHandler(async (_req, res) => {
+  const total = await productModel.countDocuments()
+  return res.json({ success: true, error: false, message: 'Product count fetched', data: total })
+})
 
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
-  }
-};
-
-const getAllUsersController = async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    const users = await userModel.find({}).select('name avatar email mobile role status order_history').populate('order_history'); // Adjust the model name and fields as necessary
-
-    if (!users || users.length === 0) {
-      return res.status(200).json({
-        error: false,
-        success: true,
-        message: 'No users found.',
-        data: [],
-      });
-    }
-    
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'Users fetched successfully',
-      data: users,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
-  }
-};
-
-const getAllProductsLengthController = async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    const products = await productModel.find({});
-
-    if (!products || products.length === 0) {
-      return res.status(200).json({
-        error: false,
-        success: true,
-        message: 'No products found.',
-        data: 0,
-      });
-    }
-
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'Products fetched successfully',
-      data: products.length,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
-  }
+const updateUserByEmail = async (email, updates) => {
+  if (!email) throw new AppError('User email is required', 400, 'EMAIL_REQUIRED')
+  const user = await userModel.findOneAndUpdate({ email: String(email).toLowerCase() }, { $set: updates }, { new: true })
+    .select('name email role status')
+  if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND')
+  return user
 }
 
-const convertToAdminController = async (req, res) => {
-  try {
-    const userId = req.userId;
+const convertToAdminController = asyncHandler(async (req, res) => {
+  const user = await updateUserByEmail(req.body.userEmail, { role: 'ADMIN', permissions: [] })
+  return res.json({ success: true, error: false, message: 'User role updated to ADMIN', data: user })
+})
 
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
+const convertToUserController = asyncHandler(async (req, res) => {
+  const user = await updateUserByEmail(req.body.userEmail, { role: 'USER', permissions: [] })
+  return res.json({ success: true, error: false, message: 'User role updated to USER', data: user })
+})
 
-    const { userEmail } = req.body; 
+const suspendUserController = asyncHandler(async (req, res) => {
+  const user = await updateUserByEmail(req.body.userEmail, { status: 'Suspended' })
+  void sendMail(
+    user.email,
+    'Suspension Notice | Scan My Meal',
+    'Your account has been suspended',
+    accountSuspention(user.name, new Date().toLocaleDateString(), 'Violation of terms and conditions'),
+  )
+  return res.json({ success: true, error: false, message: 'User suspended', data: user })
+})
 
-    const admin = await userModel.updateOne({ email : userEmail }, { role: 'ADMIN' });
-    
+const activateUserController = asyncHandler(async (req, res) => {
+  const user = await updateUserByEmail(req.body.userEmail, { status: 'Active' })
+  return res.json({ success: true, error: false, message: 'User activated', data: user })
+})
 
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'User role updated as ADMIN user',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
+const manageUpcomingOrdersController = asyncHandler(async (req, res) => {
+  const order = await transitionOrder({
+    publicOrderId: req.body.orderId,
+    nextStatus: req.body.action,
+    changedBy: req.userId,
+    source: 'ADMIN_PORTAL',
+    note: req.body.note || '',
+  })
+  return res.json({ success: true, error: false, message: `Order status updated to ${order.status}`, data: order })
+})
+
+const refundOrderController = asyncHandler(async (req, res) => {
+  const publicOrderId = req.params.orderId
+  const order = await orderModel.findOne({ $or: [{ publicOrderId }, { orderId: publicOrderId }] })
+  if (!order) throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND')
+  if (order.payment?.status === PAYMENT_STATUSES.REFUNDED) {
+    return res.json({ success: true, error: false, message: 'Order was already refunded', data: order, replayed: true })
   }
-}
-
-const convertToUserController = async (req, res) => {
-  try {
-    const userId = req.userId;
-
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    const { userEmail } = req.body; 
-
-    const admin = await userModel.updateOne({ email : userEmail }, { role: 'USER' });
-
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'User role updated as Normal user',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
+  if (order.payment?.status !== PAYMENT_STATUSES.PAID || !order.payment.providerPaymentId) {
+    throw new AppError('Only paid online orders can be refunded', 409, 'ORDER_NOT_REFUNDABLE')
   }
-}
-
-const suspendUserController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    const { userEmail } = req.body; 
-    const suspendedUser = await userModel.findOne({ email: userEmail });
-
-    const admin = await userModel.updateOne({ email : userEmail }, { status: 'Suspended' });
-    
-    await sendMail(
-      userEmail,
-      'Suspension Notice | Scan My Meal',
-      'Your account has been suspended',
-      accountSuspention(suspendedUser?.name, new Date().toLocaleDateString(), 'Violation of terms and conditions')
-    )
-
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'User role updated as Normal user',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
-  }
-}
-
-const activateUserController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(401).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    const { userEmail } = req.body; 
-
-    const admin = await userModel.updateOne({ email : userEmail }, { status: 'Active' });
-
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: 'User role updated as Normal user',
-      data: admin,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: error.message || error,
-    });
-  }
-}
-
-const manageUpcomingOrdersController = async (req, res) => {
-  console.log("Manage Upcoming Orders Controller Called");
-  try {
-    const userId = req.userId;
-    const { orderId, action } = req.body;
-
-    // 1️⃣ Check admin privileges
-    const user = await userModel.findById(userId);
-    if (!user || user.role !== 'ADMIN') {
-      return res.status(403).json({
-        error: true,
-        success: false,
-        message: 'Admin access required.',
-      });
-    }
-
-    // 2️⃣ Validate input
-    if (!orderId || !action) {
-      return res.status(400).json({
-        error: true,
-        success: false,
-        message: 'Order ID and action are required.',
-      });
-    }
-
-    // 3️⃣ Validate allowed actions (use Set for better performance)
-    const validActions = new Set(['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']);
-    if (!validActions.has(action)) {
-      return res.status(400).json({
-        error: true,
-        success: false,
-        message: 'Invalid action provided.',
-      });
-    }
-
-    // 4️⃣ Find and update the order
-    const updatedOrder = await orderModel.findOneAndUpdate(
-      { orderId },
-      { order_status: action },
-      { new: true }
-    );
-
-    if (!updatedOrder) {
-      return res.status(404).json({
-        error: true,
-        success: false,
-        message: 'Order not found.',
-      });
-    }
-
-    // 5️⃣ Success response
-    return res.status(200).json({
-      error: false,
-      success: true,
-      message: `Order status updated to "${action}".`,
-      data: updatedOrder,
-    });
-
-  } catch (error) {
-    console.error(error); // Log the error for debugging
-    return res.status(500).json({
-      error: true,
-      success: false,
-      message: 'Something went wrong.',
-    });
-  }
-};
+  const refund = await Stripe.refunds.create(
+    { payment_intent: order.payment.providerPaymentId },
+    { idempotencyKey: `refund:${order._id}` },
+  )
+  order.payment.status = PAYMENT_STATUSES.REFUNDED
+  order.payment.transactionReference = refund.id
+  order.payment_status = PAYMENT_STATUSES.REFUNDED
+  await order.save()
+  const cancelled = await transitionOrder({
+    publicOrderId,
+    nextStatus: 'CANCELLED',
+    changedBy: req.userId,
+    source: 'ADMIN_PORTAL',
+    note: `Refund ${refund.id}`,
+  })
+  return res.json({ success: true, error: false, message: 'Payment refunded and order cancelled', data: cancelled })
+})
 
 module.exports = {
-  getAllOrdersController, getAllUsersController, convertToAdminController, convertToUserController, suspendUserController, activateUserController, getAllProductsLengthController, manageUpcomingOrdersController
-};
+  getDashboardSummaryController,
+  getAllOrdersController,
+  getAllUsersController,
+  convertToAdminController,
+  convertToUserController,
+  suspendUserController,
+  activateUserController,
+  getAllProductsLengthController,
+  manageUpcomingOrdersController,
+  refundOrderController,
+}

@@ -1,6 +1,8 @@
 
 # ScanMyMeal
 
+Production-readiness documentation: [audit](docs/AUDIT_REPORT.md), [implementation](docs/IMPLEMENTATION_SUMMARY.md), [API](docs/API.md), [Redis](docs/REDIS.md), [migration](docs/MIGRATION.md), [runbook](docs/RUNBOOK.md), and [test report](docs/TEST_REPORT.md).
+
 ## Overview
 
 **ScanMyMeal** is a real-time food ordering web application designed to streamline the ordering process for users while providing admins with powerful tools to manage their restaurant. Built with the **MERN Stack** (MongoDB, Express.js, React.js, Node.js), it offers a smooth and interactive user experience.

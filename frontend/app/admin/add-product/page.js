@@ -17,6 +17,7 @@ import React, { useState } from 'react'
 import { RxCross2 } from 'react-icons/rx'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { PageHeader } from '@/Components/ui'
 
 const AddProduct = () => {
   const user = useSelector((state) => state.user)
@@ -176,9 +177,7 @@ const AddProduct = () => {
       {
         isMobile && <ResponsiveWarning />
       }
-      <h1 className='text-emerald-600 font-bold text-center my-2 lg:my-6 text-2xl'>Add Menu Items</h1>
-
-      <Divider />
+      <PageHeader eyebrow="Menu management" title="Add menu item" description="Create a complete, well-described product with pricing, stock, images, and categories." className="mb-6" />
 
       <section className="bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5 relative">
         {loading && <MiniLoader />}

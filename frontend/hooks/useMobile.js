@@ -15,7 +15,6 @@ const useMobile = (breakpoint = 768) => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
         }, [breakpoint]);
-        // console.log('ismobile', isMobile)
     return [isMobile]
 }
 

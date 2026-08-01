@@ -65,10 +65,24 @@ const userSchema = new mongoose.Schema({
         type : Date,
         default : ""
     },
+    password_reset_token_hash : {
+        type : String,
+        default : null,
+        select : false
+    },
+    password_reset_expiry : {
+        type : Date,
+        default : null,
+        select : false
+    },
     role : {
         type : String,
-        enum : ["ADMIN", "USER"],
+        enum : ["ADMIN", "MANAGER", "KITCHEN", "SUPPORT", "MARKETING", "USER"],
         default : "USER"
+    },
+    permissions : {
+        type : [String],
+        default : []
     }
 },{
     timestamps : true

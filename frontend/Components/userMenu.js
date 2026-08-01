@@ -1,80 +1,40 @@
 'use client'
+
 import Link from 'next/link'
-import React from 'react'
+import { usePathname } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
-import Divider from './Divider'
+import { LayoutDashboard, LogOut, MapPin, Package, Settings, ShieldCheck } from 'lucide-react'
+import { toast } from 'react-toastify'
 import Axios from '@/public/utils/Axios'
 import summaryApi from '@/public/common/summaryApi'
 import { logout } from '@/public/store/userSlice'
-import { toast } from 'react-toastify'
-import { RiExternalLinkLine } from "react-icons/ri";
-import usePath from '@/hooks/usePath'
 import isAdmin from '@/public/utils/isAdmin'
 import useChangePath from '@/hooks/changePath'
 
-const UserMenu = ({close}) => {
+const links = [
+  { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'My orders', href: '/dashboard/my-orders', icon: Package },
+  { label: 'Addresses', href: '/dashboard/address', icon: MapPin },
+  { label: 'Profile settings', href: '/dashboard/profile', icon: Settings },
+]
+
+const UserMenu = ({ close, compact = false }) => {
   const user = useSelector((state) => state.user)
-  const admin = isAdmin(user.role)
   const dispatch = useDispatch()
-  const isEditPage = usePath('/dashboard/profile')
+  const pathname = usePathname()
   const changePath = useChangePath()
+  const admin = isAdmin(user.role)
 
   const handleLogout = async () => {
-    try {
-        const response = await Axios({
-            ...summaryApi.logout
-        })
-
-        if(response.data.success){
-          if(close){
-            close()
-          }
-          dispatch(logout())
-          localStorage.clear()
-          // window.history.back()
-          changePath('/')
-          toast.success(response.data.message)
-        }
-    } catch (error) {
-        toast.error(error?.response?.data?.massage)
-    }
-  }
-
-  const handleClose = () => {
-    if ( close ) close()
+    try { await Axios(summaryApi.logout); dispatch(logout()); close?.(); changePath('/'); toast.success('Signed out') }
+    catch (error) { toast.error(error.response?.data?.message || 'Unable to sign out') }
   }
 
   return (
-    <div>
-        <div className='font-medium text-neutral-600'>My Account</div>
-        <Link href={'/dashboard'} className='font-medium text-emerald-700 max-w-48 text-ellipsis line-clamp-1 hover:bg-emerald-300 px-0.5'>
-          {
-            admin && <span className='font-bold text-xs text-red-600 pr-1'>ADMIN</span>
-          }
-          {user.name}
-        </Link>
-        {
-          admin && (
-            <div className='text-xs text-neutral-600 cursor-pointer px-1 mb-4'>
-              <Link href={'/admin'} className='hover:text-amber-500 font-medium'>Admin Dashboard</Link>
-            </div>
-          )
-        }
-        <Divider/>
-
-        <div className='grid text-sm gap-1 text-neutral-600 cursor-pointer'>
-            <Link href={'/dashboard/my-orders'} onClick={handleClose} className='hover:text-neutral-900 font-medium hover:bg-amber-500 p-1'>My Orders</Link>
-            <Link href={'/dashboard/address'} onClick={handleClose} className='hover:text-neutral-900 font-medium hover:bg-amber-500 p-1'>Save Address</Link>
-
-            {
-              (!isEditPage) ? (
-                <Link href={'/dashboard/profile'} onClick={handleClose} className='hover:text-neutral-900 font-medium hover:bg-amber-500 p-1'>Edit Profile <RiExternalLinkLine size={15} className='inline'/></Link>
-              ) : (
-                <Link href={'/'} onClick={handleClose} className=' hover:text-neutral-900 font-medium hover:bg-amber-500 p-1'>Home <RiExternalLinkLine size={15} className='inline'/></Link>
-              )
-            }
-            <button onClick={() => handleLogout()} className='text-red-600 hover:text-neutral-700 font-medium text-left hover:bg-red-500 p-1'>Log Out</button>
-        </div>
+    <div className={compact ? '' : 'space-y-4'}>
+      <div className={`flex items-center gap-3 ${compact ? 'border-b border-black/[0.06] p-2 pb-4' : 'rounded-2xl bg-[var(--color-surface-soft)] p-4'}`}><span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-white font-black text-[var(--color-secondary)] shadow-sm">{user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : user.name?.slice(0, 1)?.toUpperCase()}</span><div className="min-w-0"><strong className="block truncate text-sm">{user.name || 'Your account'}</strong><span className="block truncate text-xs text-[var(--color-muted)]">{user.email}</span></div></div>
+      <nav className={`grid gap-1 ${compact ? 'pt-3' : ''}`} aria-label="Account navigation">{links.map(({ label, href, icon: Icon }) => { const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href); return <Link key={href} href={href} onClick={close} className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold ${active ? 'bg-[#19221d] text-white shadow-md' : 'text-[var(--color-muted)] hover:bg-white hover:text-[var(--color-text)]'}`}><Icon size={18} />{label}</Link> })}{admin && <Link href="/admin" onClick={close} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold text-[var(--color-secondary)] hover:bg-emerald-50"><ShieldCheck size={18} />Admin workspace</Link>}</nav>
+      <button onClick={handleLogout} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-[var(--color-error)] hover:bg-red-50"><LogOut size={18} />Sign out</button>
     </div>
   )
 }

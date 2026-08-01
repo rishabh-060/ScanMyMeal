@@ -26,7 +26,8 @@ const productSchema = new mongoose.Schema({
     },
     stock : {
         type : Number,
-        default : 0
+        default : 0,
+        min : 0
     },
     price : {
         type : Number,
@@ -47,15 +48,23 @@ const productSchema = new mongoose.Schema({
     publish : {
         type : Boolean,
         default : true
+    },
+    isAvailable : {
+        type : Boolean,
+        default : true
     }
 }, {
     timestamps : true
 })
 
 
-productSchema.index({ name: 'text', description: 'text'  },{
-    name: 10,
-    description: 5
-})
+productSchema.index(
+    { name: 'text', description: 'text' },
+    {
+        name: 'product_text_search',
+        weights: { name: 10, description: 5 }
+    }
+)
+productSchema.index({ publish: 1, isAvailable: 1, category: 1, createdAt: -1 })
 
 module.exports = mongoose.model('product', productSchema)

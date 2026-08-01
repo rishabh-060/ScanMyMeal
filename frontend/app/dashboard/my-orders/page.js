@@ -1,149 +1,52 @@
 'use client'
 
-import BacktoHome from '@/Components/BacktoHome'
-import Divider from '@/Components/Divider'
-import useMobile from '@/hooks/useMobile'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSelector } from 'react-redux'
-import { ChevronDown, ChevronUp, Phone, MapPin, CreditCard, PackageCheck, User } from 'lucide-react'
-import RestrictUser from '@/Components/RestrictUser'
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { Card, EmptyState, PageHeader, StatusBadge } from '@/Components/ui'
 
-const MyOrder = () => {
-  const [isMobile] = useMobile()
-  const orders = useSelector(state => state.orders.orders)
-  const user = useSelector((state) => state.user)
+const normalizedItems = (order) => order.items?.length ? order.items : [{
+  nameSnapshot: order.product_details?.name,
+  imageSnapshot: order.product_details?.image || [],
+  quantity: 1,
+  subtotal: order.totalAmt,
+}]
 
-  useEffect(() => {
-    if (!user) {
-      <RestrictUser />
-    }
-  }, [])
-
-  const [openOrders, setOpenOrders] = useState([])
-
-  const toggleOrder = (id) => {
-    setOpenOrders(prev =>
-      prev.includes(id) ? prev.filter(oid => oid !== id) : [...prev, id]
-    )
-  }
-
+const MyOrders = () => {
+  const orders = useSelector((state) => state.orders.orders)
+  const [openOrder, setOpenOrder] = useState('')
   return (
-    <main className="px-2 lg:px-5 pt-4 lg:pt-8">
-      {isMobile && <BacktoHome />}
-      <h1 className="text-3xl font-bold text-center text-emerald-600 mb-2 lg:mb-6">My Orders</h1>
-      <Divider />
-
-      <section className="bg-amber-400 rounded-xl shadow-md w-full my-6 p-4 lg:p-6">
-        {orders.length > 0 ? (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div key={order._id} className="bg-white p-4 lg:p-5 rounded-lg shadow flex flex-col gap-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1 w-full">
-                    <div className="flex items-center gap-2">
-                      <PackageCheck size={20} className="text-amber-700" />
-                      <h2 className="text-base font-semibold text-amber-900">
-                        Order ID: <span className='text-emerald-600 font-bold text-lg'>{order.orderId}</span>
-                      </h2>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-700">
-                        Status: <span className={`text-base font-semibold ${order.order_status == 'pending' ? 'text-amber-600' : order.order_status == 'completed' ? 'text-green-600' : 'text-red-600'}`}>{order.order_status || 'Pending'}</span>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-5 w-full">
-                      <div>
-                        {
-                          order.product_details?.image?.[0] && (
-                            <img
-                              src={order.product_details.image[0]}
-                              alt={order.product_details.name}
-                              className="w-16 h-16 object-cover rounded-md border border-amber-300"
-                            />
-                          )
-                        }
-                      </div>
-
-                      <div>
-                        <h4 className="text-amber-800 text-base font-semibold">{order.product_details?.name}</h4>
-                        <p className="text-amber-800 text-sm">
-                          Total: <span className="font-semibold">₹ {order.totalAmt || 'N/A'}</span>
-                        </p>
-                        <p className="text-amber-800 text-sm">
-                          Date: <span className="font-semibold">{new Date(order.createdAt).toLocaleDateString()}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleOrder(order._id)}
-                    className="text-amber-700 hover:text-amber-900"
-                  >
-                    {openOrders.includes(order._id) ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
-                  </button>
+    <main className="space-y-5 p-2 lg:p-5">
+      <PageHeader eyebrow="Order history" title="My orders" description="Track each complete checkout and expand it to review every item." />
+      {!orders.length && <EmptyState title="No orders yet" description="Your completed checkouts will appear here." />}
+      <div className="space-y-4">
+        {orders.map((order) => {
+          const items = normalizedItems(order)
+          const quantity = items.reduce((total, item) => total + Number(item.quantity || 1), 0)
+          const id = order.publicOrderId || order.orderId
+          const expanded = openOrder === order._id
+          return (
+            <Card key={order._id} className="p-5">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Order ID</p>
+                  <h2 className="font-bold text-emerald-800">{id}</h2>
+                  <p className="mt-1 text-sm text-neutral-600">{new Date(order.createdAt).toLocaleString()} · {order.orderType || 'LEGACY'} · {items.length} item{items.length === 1 ? '' : 's'} / {quantity} total</p>
+                  <p className="mt-1 text-sm text-neutral-600">{order.orderType === 'DINE_IN' ? `Table ${order.table?.tableNumber || ''}` : order.deliveryAddress?.addressLine || order.delivery_address?.address_line || 'Takeaway'}</p>
                 </div>
-
-                {/* Expandable Section */}
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openOrders.includes(order._id) ? 'max-h-96 mt-3' : 'max-h-0'
-                  }`}
-                >
-                  <div className="text-amber-900 space-y-3 text-sm border-t border-dashed border-amber-300 pt-3">
-                    <div className="flex items-center gap-2">
-                      <CreditCard size={16} className="text-amber-700" />
-                      <p className="font-medium text-emerald-600">
-                        <span className="text-amber-700 font-semibold">Payment Status:</span> {order.payment_status || 'N/A'}
-                      </p>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <MapPin size={16} className="text-amber-700 mt-0.5" />
-                      <p className="font-medium text-emerald-600">
-                        <span className="text-amber-700 font-semibold">Address:</span> {order.delivery_address?.address_line}, {order.delivery_address?.city}, {order.delivery_address?.pincode}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Phone size={16} className="text-amber-700" />
-                      <p className="font-medium text-emerald-600">
-                        <span className="text-amber-700 font-semibold">Contact No:</span> {order.delivery_address?.mobile || 'N/A'}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <PackageCheck size={16} className="text-amber-700" />
-                      <p className="font-medium text-emerald-600">
-                        <span className="text-amber-700 font-semibold">Order No:</span> {order.orderId}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <PackageCheck size={16} className="text-amber-700" />
-                      <p className="font-medium text-emerald-600">
-                        <span className="text-amber-700 font-semibold">Product ID:</span> {order.productId}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <User size={16} className="text-amber-700" />
-                      <p className="font-medium text-emerald-600">
-                        <span className="text-amber-700 font-semibold">User ID:</span> {order.userId}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <div className="flex items-start gap-2"><StatusBadge value={order.payment?.status || order.payment_status} /><StatusBadge value={order.status || order.order_status} /></div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-500">No orders found.</p>
-        )}
-      </section>
+              <div className="mt-4 flex items-center justify-between border-t border-neutral-200 pt-4">
+                <strong>₹{order.pricing?.grandTotal ?? order.totalAmt}</strong>
+                <button onClick={() => setOpenOrder(expanded ? '' : order._id)} className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 font-semibold text-amber-700" aria-expanded={expanded}>{expanded ? 'Hide details' : 'View details'}{expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>
+              </div>
+              {expanded && <div className="mt-3 grid gap-3 border-t border-dashed border-neutral-300 pt-4">{items.map((item, index) => <div key={`${item.product || index}`} className="flex items-center gap-3"><img src={item.imageSnapshot?.[0] || '/assets/favicon.png'} alt="" className="h-14 w-14 rounded-lg object-cover" /><div className="flex-1"><p className="font-semibold">{item.nameSnapshot}</p><p className="text-sm text-neutral-600">Quantity: {item.quantity || 1}</p></div><strong>₹{item.subtotal}</strong></div>)}</div>}
+            </Card>
+          )
+        })}
+      </div>
     </main>
   )
 }
 
-export default MyOrder
+export default MyOrders

@@ -1,52 +1,19 @@
 'use client'
-import React from 'react'
-import { motion } from 'framer-motion'
+
 import Link from 'next/link'
-import { XCircle } from 'lucide-react'
+import { ArrowRight, CreditCard, Home, RefreshCcw, ShieldCheck, ShoppingBag, XCircle } from 'lucide-react'
+import { Card } from '@/Components/ui'
 
-const CancelPage = () => {
-  return (
-    <section className="min-h-[72vh] flex items-center justify-center bg-gradient-to-br from-rose-50 to-rose-100 px-4">
-      <motion.div
-        className="bg-white shadow-2xl rounded-3xl p-8 max-w-md text-center space-y-6"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <motion.div
-          className="flex justify-center"
-          initial={{ rotate: -90, opacity: 0 }}
-          animate={{ rotate: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 100, delay: 0.3 }}
-        >
-          <XCircle className="text-red-500" size={80} strokeWidth={1.5} />
-        </motion.div>
-
-        <h1 className="text-2xl md:text-3xl font-bold text-red-700">
-          Payment Cancelled!
-        </h1>
-
-        <p className="text-neutral-600 text-sm md:text-base">
-          Your payment was cancelled or failed. If this was a mistake, please try again or contact support.
-        </p>
-
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-          <Link
-            href="/"
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition"
-          >
-            Go to Home
-          </Link>
-          {/* <Link
-            href="/contact"
-            className="border border-red-600 hover:bg-red-100 text-red-700 px-6 py-2 rounded-lg text-sm font-semibold transition"
-          >
-            Contact Support
-          </Link> */}
-        </div>
-      </motion.div>
-    </section>
-  )
-}
+const CancelPage = () => (
+  <main className="grid min-h-[74vh] place-items-center bg-[var(--color-background)] px-4 py-10">
+    <Card className="w-full max-w-3xl overflow-hidden">
+      <div className="grid gap-8 p-6 sm:p-9 md:grid-cols-[0.8fr_1.2fr] md:items-center">
+        <div className="grid min-h-64 place-items-center rounded-[2rem] bg-red-50 text-center"><div><span className="mx-auto grid h-24 w-24 place-items-center rounded-[2rem] bg-white text-red-600 shadow-sm"><XCircle size={52} /></span><p className="mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-red-700">Payment incomplete</p></div></div>
+        <div><h1 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">Your order wasn’t charged</h1><p className="mt-4 text-sm leading-7 text-[var(--color-muted)]">The payment was cancelled or could not be completed. Your cart is still available, so you can review it and try again when you’re ready.</p><div className="mt-6 grid gap-3">{[[ShieldCheck, 'No completed charge was recorded'], [ShoppingBag, 'Your cart items remain available'], [CreditCard, 'You can retry with the same or another payment method']].map(([Icon, text]) => <div key={text} className="flex items-center gap-3 rounded-2xl bg-[var(--color-surface-soft)] p-3 text-sm font-semibold"><Icon size={19} className="text-[var(--color-secondary)]" />{text}</div>)}</div></div>
+      </div>
+      <div className="flex flex-col gap-3 border-t border-black/[0.06] bg-[var(--color-surface-soft)]/50 p-5 sm:flex-row sm:justify-end"><Link href="/" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-5 font-bold"><Home size={17} /> Return home</Link><Link href="/dashboard/cart" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-5 font-bold"><ShoppingBag size={17} /> Review cart</Link><Link href="/place-order" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 font-bold text-white"><RefreshCcw size={17} /> Try payment again <ArrowRight size={16} /></Link></div>
+    </Card>
+  </main>
+)
 
 export default CancelPage

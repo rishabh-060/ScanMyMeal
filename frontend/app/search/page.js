@@ -1,100 +1,56 @@
 'use client'
-import CardLoading from '@/Components/CardLoading'
+
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Search, Sparkles } from 'lucide-react'
+import { toast } from 'react-toastify'
 import CardProduct from '@/Components/CardProduct'
+import { Button, EmptyState, Skeleton } from '@/Components/ui'
 import summaryApi from '@/public/common/summaryApi'
 import Axios from '@/public/utils/Axios'
-import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
-import InfiniteScroll from 'react-infinite-scroll-component'
-import { useSearchParams } from 'next/navigation'
 
-
-const Search = () => {
-  const [data, setData] = useState([])
+const SearchPage = () => {
+  const query = useSearchParams().get('q')?.trim() || ''
+  const [items, setItems] = useState([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(false)
-  const loadingArrayCard = new Array(10).fill(null) || []
-  const [page, setPage] =useState(1)
-  const [totalpage, setTotalpage] = useState(1)
-  const params = useSearchParams()
-  const searchQuery = params.get('q') || ""
+  const requestId = useRef(0)
 
-  const fetchData = async () => {
+  const load = async (targetPage, replace = false) => {
+    if (!query) return
+    const currentRequest = ++requestId.current
     setLoading(true)
     try {
-      const response = await Axios({
-        ...summaryApi.searchProduct,
-        data: {
-          search : searchQuery,
-          page : page,
-          limit : 16
-        }
-      })
-      const {data : responseData} = response
-
-      if(responseData.success){
-        if(responseData.page == 1){
-          setData(responseData.data)
-        }else{
-          setData((prev) => {
-            return [
-              ...prev,
-              ...responseData.data
-            ]
-          })
-        }
-        setTotalpage(responseData.totalPage)
-      }
+      const response = await Axios({ ...summaryApi.searchProduct, data: { search: query, page: targetPage, limit: 12 } })
+      if (currentRequest !== requestId.current) return
+      const result = response.data
+      setItems((current) => replace ? (result.data || []) : [...current, ...(result.data || [])])
+      setTotalPages(Number(result.totalPage || 0)); setTotalCount(Number(result.totalCount || 0))
     } catch (error) {
-      toast.error(error?.data?.message)
-    } finally {
-      setLoading(false)
-    }
+      if (currentRequest === requestId.current) toast.error(error.response?.data?.message || 'Unable to search the menu')
+    } finally { if (currentRequest === requestId.current) setLoading(false) }
   }
 
   useEffect(() => {
-    if(searchQuery) fetchData()
-  },[page, searchQuery])
+    requestId.current += 1; setItems([]); setPage(1); setTotalPages(0); setTotalCount(0)
+    if (query) load(1, true)
+  }, [query])
 
-  const handleFetchMore = () => {
-    if(totalpage > page){
-      setPage(prev => prev + 1)
-    }
-  }
+  const loadMore = async () => { const next = page + 1; setPage(next); await load(next) }
 
   return (
-    <main className="min-h-[75vh] w-full bg-amber-50 p-4">
-        <section className='container mx-auto p-4 w-full bg-amber-100 rounded'>
-          <p className='text-neutral-700 font-medium text-base lg:text-lg'>Search Results : {data.length}</p>
-          
-          <InfiniteScroll
-            dataLength={data.length}
-            hasMore={true}
-            next={handleFetchMore}
-          >
-
-          <div className='grid w-full items-center justify-around grid-cols-2 md:grid-col-4 lg:grid-cols-8 gap-3 lg:gap-5 px-1 py-5 lg:py-8 lg:px-5'>
-              {
-                data.map((p, idx) => {
-                  return (
-                    <CardProduct data={p} key={idx+'kkkn229i9i'}/>
-                  )
-                })
-              }
-
-              {
-                loading && (
-                  loadingArrayCard.map((_, idx) => {
-                    return (
-                      <CardLoading key={idx+'jvvbjb26262'}/>
-                    )
-                  })
-                )
-              }
-          </div>
-          </InfiniteScroll>
-        </section>
+    <main className="min-h-[72vh] bg-[var(--color-background)] py-7 sm:py-10">
+      <div className="page-container">
+        <header className="flex flex-col justify-between gap-4 border-b border-black/[0.06] pb-6 sm:flex-row sm:items-end"><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--color-primary)]">Menu search</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">{query ? `Results for “${query}”` : 'What are you craving?'}</h1><p className="mt-2 text-sm text-[var(--color-muted)]">{query ? loading && !items.length ? 'Searching the menu…' : `${totalCount} ${totalCount === 1 ? 'item' : 'items'} found` : 'Use the search field above to find dishes, drinks, and categories.'}</p></div>{query && <span className="inline-flex w-fit items-center gap-2 rounded-full bg-orange-50 px-3 py-2 text-xs font-bold text-[var(--color-primary)]"><Sparkles size={14} /> Fresh matches</span>}</header>
+        {!query && <div className="mt-8"><EmptyState title="Start with a dish or ingredient" description="Try biryani, pizza, breakfast, tea, or the name of a category." /></div>}
+        {query && loading && !items.length && <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">{Array.from({ length: 10 }).map((_, index) => <Skeleton key={index} className="h-80" />)}</div>}
+        {query && !loading && !items.length && <div className="mt-8"><EmptyState title="No matching menu items" description="Check the spelling, try a broader word, or search for another category." action={<span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-primary)]"><Search size={16} /> Try another search above</span>} /></div>}
+        {items.length > 0 && <><section className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 [&>article]:w-full">{items.map((item) => <CardProduct data={item} key={item._id} />)}{loading && Array.from({ length: 4 }).map((_, index) => <Skeleton key={`more-${index}`} className="h-80" />)}</section><div className="mt-8 flex justify-center">{page < totalPages ? <Button onClick={loadMore} loading={loading}>Load more results</Button> : <p className="text-sm font-semibold text-[var(--color-muted)]">You’ve reached the end of the results.</p>}</div></>}
+      </div>
     </main>
   )
 }
 
-export default Search
+export default SearchPage

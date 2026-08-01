@@ -1,210 +1,56 @@
 'use client'
-import BacktoHome from '@/Components/BacktoHome'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { Edit3, Layers3, Plus, Search, Trash2 } from 'lucide-react'
+import { toast } from 'react-toastify'
 import ConfirmBox from '@/Components/ConfirmBox'
-import Divider from '@/Components/Divider'
 import EditSubCategory from '@/Components/EditSubCategory'
-import MiniLoader from '@/Components/MiniLoader'
-import NoData from '@/Components/NoData'
-import ResponsiveWarning from '@/Components/ResponsiveWarning'
 import RestrictUser from '@/Components/RestrictUser'
 import UploadSubcategory from '@/Components/UploadSubcategory'
 import ViewImage from '@/Components/ViewImage'
-import useMobile from '@/hooks/useMobile'
+import { Button, Card, EmptyState, PageHeader, Skeleton } from '@/Components/ui'
 import summaryApi from '@/public/common/summaryApi'
 import Axios from '@/public/utils/Axios'
 import isAdmin from '@/public/utils/isAdmin'
-import React, { useEffect, useState } from 'react'
-import { FiEdit3 } from 'react-icons/fi'
-import { MdDeleteForever } from 'react-icons/md'
-import { TbCategoryPlus } from 'react-icons/tb'
-import { useSelector } from 'react-redux'
-import { toast } from 'react-toastify'
 
-const SubCategory = () => {
+const SubCategoryPage = () => {
   const user = useSelector((state) => state.user)
-  const [ isMobile ] = useMobile()
+  const [items, setItems] = useState([])
+  const [query, setQuery] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [editTarget, setEditTarget] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [preview, setPreview] = useState('')
 
-  const [openUploadSubCategory, setOpenUploadSubCategory] = useState(false)
-  const [openEditSubCategory, setOpenEditSubCategory] = useState(false)
-  const [editdata, setEditdata] = useState({
-    _id : ""
-  })
-  const [deleteData, setDeleteData] = useState({
-    _id : ""
-  })
-  const [openConfirmBox, setOpenConfirmBox] = useState(false)
-  const [subCategoryData, setSubCategoryData] = useState([])
-  const [openSubCatImg, setOpenSubCatImg] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  // restrict normal users
-  if(!isAdmin(user.role)){
-    return <RestrictUser />
+  const load = async () => {
+    setLoading(true)
+    try { const response = await Axios(summaryApi.getSubcategory); setItems(response.data.data || []) }
+    catch (error) { toast.error(error.response?.data?.message || 'Unable to load subcategories') }
+    finally { setLoading(false) }
   }
-
-  const fetchSubCategory = async () => {
-    try {
-      setLoading(true)
-      const response = await Axios({
-        ...summaryApi.getSubcategory
-      })
-      const { data : responseData } = response
-
-      if (responseData?.success) {
-        setSubCategoryData(responseData.data)
-      }
-    } catch (error) {
-      toast.error(error?.data?.message)
-    } finally {
-      setLoading(false)
-    }
+  useEffect(() => { load() }, [])
+  const filtered = useMemo(() => items.filter((item) => `${item.name} ${item.category?.map((category) => category.name).join(' ')}`.toLowerCase().includes(query.toLowerCase())), [items, query])
+  const remove = async () => {
+    try { await Axios({ ...summaryApi.deleteSubcategory, data: { _id: deleteTarget._id } }); toast.success('Subcategory deleted'); setDeleteTarget(null); await load() }
+    catch (error) { toast.error(error.response?.data?.message || 'Unable to delete subcategory') }
   }
-
-  const handleDeleteSubCategory = async () => {
-    try {
-      const response = await Axios({
-        ...summaryApi.deleteSubcategory,
-        data : deleteData
-      })
-
-      const { data : responseData} = response
-
-      if(responseData.success) {
-        toast.success(responseData.message)
-        fetchSubCategory()
-        setOpenConfirmBox(false)
-        setDeleteData({
-          _id : ""
-        })
-      }
-    } catch (error) {
-      toast.error(error?.data?.data?.message)
-    }
-  }
-
-  useEffect(() => {
-    fetchSubCategory()
-  }, [])
+  if (!isAdmin(user.role)) return <RestrictUser />
 
   return (
-    <main className='px-2 lg:px-5'>
-      {
-        isMobile && <BacktoHome />
-      }
-
-      {
-        isMobile && <ResponsiveWarning />
-      }
-      <h1 className='text-emerald-600 font-bold text-center my-2 lg:my-6 text-2xl'>Sub-Category</h1>
-
-      <Divider />
-
-      <div className='w-full my-5 flex flex-row-reverse'>
-        <button onClick={() => setOpenUploadSubCategory(true)} className='mr-1 bg-emerald-700 hover:bg-emerald-600 text-neutral-200 text-sm font-medium rounded-sm px-5 py-1.5'>Add Sub-category <TbCategoryPlus size={18} className='text-neutral-200 inline font-bold'/></button>
-      </div>
-
-      {
-        openUploadSubCategory && (
-          <UploadSubcategory fetchData={() => fetchSubCategory()} close={() => setOpenUploadSubCategory(false)}/>
-        )
-      }
-
-      <section className="relative bg-amber-400 rounded-lg w-full min-h-52 my-6 p-3 lg:p-5">
-        {loading && <MiniLoader />}
-
-        {!subCategoryData[0] && <NoData />}
-
-        {
-          subCategoryData[0] && <h1 className="text-2xl text-center font-bold text-amber-700 mb-6">Sub-Category List</h1>
-        }
-
-        <div className="relative w-full h-full bg-white/90 rounded-lg shadow-md overflow-hidden">        
-          <div className="min-h-[450px] overflow-hidden">
-            <table className="w-full rounded-lg border-collapse">
-              {/* Table Head */}
-              <thead className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold text-lg z-10 shadow-md">
-                <tr className="h-14">
-                  <th className="px-5 py-3 border-b border-emerald-400 tracking-wide uppercase text-center rounded-tl-lg">Sr. no</th>
-                  <th className="px-5 py-3 border-b border-emerald-400 tracking-wide uppercase">Sub-Category Name</th>
-                  <th className="px-5 py-3 border-b border-emerald-400 tracking-wide uppercase">Image</th>
-                  <th className="px-5 py-3 border-b border-emerald-400 tracking-wide uppercase">Category</th>
-                  <th className="px-5 py-3 border-b border-emerald-400 tracking-wide uppercase rounded-tr-lg">Action</th>
-                </tr>
-              </thead>
-              
-              <tbody>
-                {subCategoryData.map((subCategory, index) => (
-                  <tr key={index} className="hover:bg-amber-200/50 transition duration-300 transform hover:scale-[1.02]">
-                    <td className="px-5 py-3 border-b border-gray-300 text-center font-medium">{index + 1}</td>
-                    <td className="px-5 py-3 border-b border-gray-300">{subCategory.name}</td>
-                    <td className="px-5 py-3 border-b border-gray-300 flex justify-center">
-                      <img 
-                        src={subCategory.image} 
-                        alt="Subcategory" 
-                        width={50} 
-                        height={50} 
-                        className="rounded-lg object-cover shadow-md border border-gray-400 cursor-pointer"
-                        onClick={() => setOpenSubCatImg(subCategory.image)}
-                      />
-                    </td>
-                    <td className="px-5 py-3 border-b border-gray-300">
-                      {
-                        subCategory.category.map((cat, idx) => {
-                          return (
-                            <span 
-                              key={idx} 
-                              className="inline-block bg-emerald-500 text-white text-sm font-semibold px-3 py-1 rounded-full shadow-md mx-1 uppercase">
-                              {cat.name}
-                            </span>
-                          )
-                        })
-                      }
-                    </td>
-                    <td className="px-5 py-3 border-b border-gray-300">
-                      <div className=' flex justify-between items-center gap-3 w-full h-full'>
-                        {/* edit button */}
-                        <button 
-                          className='flex-1 text-xs font-extrabold hover:text-emerald-700 bg-emerald-200 hover:bg-emerald-300 rounded-full p-1 text-neutral-500' 
-                          onClick={() => {
-                            setOpenEditSubCategory(true)
-                            setEditdata(subCategory)
-                          }}
-                        >
-                          <FiEdit3 size={13} className='inline text-emerald-700'/>
-                        </button>
-
-                        <button 
-                          className='flex-1 text-xs font-extrabold hover:text-red-600 bg-red-200 hover:bg-red-300 rounded-full p-1 text-neutral-500'
-                          onClick={() => {
-                            setOpenConfirmBox(true)
-                            setDeleteData(subCategory)
-                          }}
-                        >
-                          <MdDeleteForever size={15} className='inline text-red-600'/>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {
-        openSubCatImg && <ViewImage url={openSubCatImg} close={() => setOpenSubCatImg("")}/>
-      }
-
-      {
-        openEditSubCategory && <EditSubCategory editData={editdata} close={() => setOpenEditSubCategory(false)} fetchData={() => fetchSubCategory()}/>
-      }
-
-      {
-        openConfirmBox && <ConfirmBox cancel={() => setOpenConfirmBox(false)} close={() => setOpenConfirmBox(false)} confirm={handleDeleteSubCategory}/>
-      }
+    <main className="space-y-6">
+      <PageHeader eyebrow="Menu structure" title="Subcategories" description="Create focused collections beneath categories so customers reach the right items faster." action={<Button onClick={() => setCreating(true)}><Plus size={18} /> Add subcategory</Button>} />
+      <Card className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center"><label className="flex min-h-12 flex-1 items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 focus-within:border-[var(--color-primary)] focus-within:ring-4 focus-within:ring-orange-100"><Search size={18} className="text-[var(--color-muted)]" /><input className="search-field-input min-w-0 flex-1 py-3" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search subcategories or parent categories" /></label><p className="shrink-0 text-sm font-semibold text-[var(--color-muted)]">{filtered.length} of {items.length}</p></Card>
+      {loading && <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3,4,5,6].map((item) => <Skeleton key={item} className="h-52" />)}</section>}
+      {!loading && !filtered.length && <EmptyState title={query ? 'No subcategories match' : 'No subcategories yet'} description={query ? 'Try another name or parent category.' : 'Add a subcategory to create more focused menu collections.'} />}
+      {!loading && <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{filtered.map((item) => <Card key={item._id} className="flex gap-4 p-4"><button onClick={() => setPreview(item.image)} className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[var(--color-surface-soft)]" aria-label={`Preview ${item.name} image`}><img src={item.image} alt="" className="h-full w-full object-cover transition hover:scale-105" /></button><div className="min-w-0 flex-1"><div className="flex items-start gap-2"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Layers3 size={17} /></span><div className="min-w-0"><h2 className="truncate font-black">{item.name}</h2><p className="text-xs text-[var(--color-muted)]">Subcategory</p></div></div><div className="mt-3 flex flex-wrap gap-1.5">{item.category?.map((category) => <span key={category._id} className="rounded-full bg-[var(--color-surface-soft)] px-2.5 py-1 text-[11px] font-bold text-[var(--color-secondary)]">{category.name}</span>)}</div><div className="mt-3 flex gap-2"><Button size="sm" variant="outline" className="flex-1" onClick={() => setEditTarget(item)}><Edit3 size={14} /> Edit</Button><Button size="sm" variant="ghost" className="text-red-600" onClick={() => setDeleteTarget(item)} aria-label={`Delete ${item.name}`}><Trash2 size={15} /></Button></div></div></Card>)}</section>}
+      {creating && <UploadSubcategory fetchData={load} close={() => setCreating(false)} />}
+      {editTarget && <EditSubCategory editData={editTarget} close={() => setEditTarget(null)} fetchData={load} />}
+      {deleteTarget && <ConfirmBox cancel={() => setDeleteTarget(null)} close={() => setDeleteTarget(null)} confirm={remove} />}
+      {preview && <ViewImage url={preview} close={() => setPreview('')} />}
     </main>
   )
 }
 
-export default SubCategory
+export default SubCategoryPage
