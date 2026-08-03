@@ -13,6 +13,7 @@ import { setUserDetails } from '@/public/store/userSlice'
 import useChangePath from '@/hooks/changePath'
 import { AuthInput, AuthShell, PasswordInput } from '@/Components/AuthShell'
 import { Button, Modal } from '@/Components/ui'
+import { isStaff } from '@/public/utils/isAdmin'
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
@@ -24,7 +25,7 @@ export default function Login() {
   const router = useRouter()
   const changePath = useChangePath()
 
-  useEffect(() => { if (user?.id) router.replace('/') }, [router, user?.id])
+  useEffect(() => { if (user?.id) router.replace(isStaff(user.role) ? '/admin' : '/') }, [router, user?.id, user.role])
   const update = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
 
   const submit = async (event) => {
@@ -35,7 +36,7 @@ export default function Login() {
       const details = await fetchUserDetails()
       dispatch(setUserDetails(details.data))
       toast.success('Welcome back')
-      changePath('/')
+      changePath(isStaff(details.data.role) ? '/admin' : '/')
     } catch (error) {
       const response = error.response
       if (response?.status === 403 && response.data?.email) setVerificationEmail(response.data.email)

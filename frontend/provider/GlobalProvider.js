@@ -137,7 +137,7 @@ export const GlobalProvider = ({ children }) => {
     , [cartItem])
 
     useEffect(() => {
-      if( user?.id ) {
+      if( user?.id && user?.role === 'USER' ) {
         fetchCartItem();
         fetchAddress();
         fetchOrder();
@@ -146,7 +146,7 @@ export const GlobalProvider = ({ children }) => {
         dispatch(handleAddAddress([]));
         dispatch(setOrders([]));
       }
-    }, [user?.id]);
+    }, [user?.id, user?.role]);
 
     useEffect(() => {
       window.addEventListener('session-expired', handleLogout)

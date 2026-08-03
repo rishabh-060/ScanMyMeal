@@ -2,11 +2,15 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useSelector } from 'react-redux'
-import { ArrowLeft, BadgePercent, BarChart3, Bell, Boxes, CalendarClock, Images, LayoutDashboard, Layers3, ListTree, PlusCircle, QrCode, ShieldCheck, ShoppingBag, Users } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useDispatch, useSelector } from 'react-redux'
+import { ArrowLeft, BadgePercent, BarChart3, Bell, Boxes, CalendarClock, Images, LayoutDashboard, Layers3, ListTree, LogOut, PlusCircle, QrCode, ShieldCheck, ShoppingBag, Users } from 'lucide-react'
+import { toast } from 'react-toastify'
 import RestrictUser from '@/Components/RestrictUser'
 import { hasPermission, isStaff } from '@/public/utils/isAdmin'
+import Axios from '@/public/utils/Axios'
+import summaryApi from '@/public/common/summaryApi'
+import { logout } from '@/public/store/userSlice'
 
 const links = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, permission: 'dashboard.view', group: 'Workspace' },
@@ -22,12 +26,21 @@ const links = [
   { label: 'Banners', href: '/admin/banners', icon: Images, permission: 'banners.manage', group: 'Growth' },
   { label: 'Table QR', href: '/admin/generate-qr', icon: QrCode, permission: 'tables.manage', group: 'Operations' },
   { label: 'Customers', href: '/admin/all-users', icon: Users, permission: 'customers.view', group: 'People' },
-  { label: 'Roles & access', href: '/admin/access', icon: ShieldCheck, permission: 'access.manage', group: 'People' },
+  { label: 'Staff management', href: '/admin/access', icon: ShieldCheck, permission: 'access.manage', group: 'People' },
 ]
 
 export default function AdminLayout({ children }) {
   const user = useSelector((state) => state.user)
   const pathname = usePathname()
+  const router = useRouter()
+  const dispatch = useDispatch()
+  const signOut = async () => {
+    try { await Axios(summaryApi.logout) }
+    catch (_error) { /* Clear the local session even if the server session already expired. */ }
+    dispatch(logout())
+    router.replace('/login')
+    toast.success('Signed out')
+  }
   if (!isStaff(user.role)) return <RestrictUser />
   const activeLink = links.find((item) => item.href === pathname) || links.find((item) => item.href !== '/admin' && pathname.startsWith(item.href))
   if (activeLink && !hasPermission(user, activeLink.permission)) return <RestrictUser />
@@ -45,6 +58,7 @@ export default function AdminLayout({ children }) {
             {hasPermission(user, 'notifications.view') && <Link href="/admin/notifications" className="relative grid h-10 w-10 place-items-center rounded-xl border border-black/[0.06] bg-white text-[var(--color-muted)] shadow-sm hover:text-[var(--color-primary)]" aria-label="Open notifications"><Bell size={18} /></Link>}
             <div className="hidden text-right md:block"><p className="text-sm font-black leading-4">{user.name}</p><p className="mt-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-secondary)]">{user.role?.replaceAll('_', ' ')}</p></div>
             <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-[#19221d] text-sm font-black text-white">{user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : user.name?.slice(0, 1)?.toUpperCase()}</span>
+            <button type="button" onClick={signOut} className="grid h-10 w-10 place-items-center rounded-xl border border-black/[0.06] bg-white text-[var(--color-muted)] shadow-sm hover:text-[var(--color-error)]" aria-label="Sign out of admin workspace"><LogOut size={18} /></button>
           </div>
         </div>
       </header>

@@ -81,6 +81,17 @@ const userSchema = new mongoose.Schema({
         enum : ["ADMIN", "MANAGER", "KITCHEN", "SUPPORT", "MARKETING", "USER"],
         default : "USER"
     },
+    accountType : {
+        type : String,
+        enum : ["CUSTOMER", "STAFF"],
+        default : "CUSTOMER",
+        index : true
+    },
+    staffCreatedBy : {
+        type : mongoose.Schema.ObjectId,
+        ref : "User",
+        default : null
+    },
     permissions : {
         type : [String],
         default : []

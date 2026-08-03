@@ -123,14 +123,15 @@ const getOrderReportController = asyncHandler(async (req, res) => {
 const getAllUsersController = asyncHandler(async (req, res) => {
   const page = Math.max(1, Number.parseInt(req.query.page || '1', 10))
   const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit || '25', 10)))
-  const query = req.query.search
-    ? { $or: [
+  const query = { role: 'USER' }
+  if (req.query.search) {
+    query.$or = [
       { name: { $regex: req.query.search, $options: 'i' } },
       { email: { $regex: req.query.search, $options: 'i' } },
-    ] }
-    : {}
+    ]
+  }
   const [users, total] = await Promise.all([
-    userModel.find(query).select('name avatar email mobile role permissions status createdAt last_login_date').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    userModel.find(query).select('name avatar email mobile role permissions status verify_email order_history createdAt last_login_date').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     userModel.countDocuments(query),
   ])
   return res.json({ success: true, error: false, data: users, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
@@ -141,26 +142,16 @@ const getAllProductsLengthController = asyncHandler(async (_req, res) => {
   return res.json({ success: true, error: false, message: 'Product count fetched', data: total })
 })
 
-const updateUserByEmail = async (email, updates) => {
+const updateUserByEmail = async (email, updates, filter = {}) => {
   if (!email) throw new AppError('User email is required', 400, 'EMAIL_REQUIRED')
-  const user = await userModel.findOneAndUpdate({ email: String(email).toLowerCase() }, { $set: updates }, { new: true })
+  const user = await userModel.findOneAndUpdate({ ...filter, email: String(email).toLowerCase() }, { $set: updates }, { new: true })
     .select('name email role status')
   if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND')
   return user
 }
 
-const convertToAdminController = asyncHandler(async (req, res) => {
-  const user = await updateUserByEmail(req.body.userEmail, { role: 'ADMIN', permissions: [] })
-  return res.json({ success: true, error: false, message: 'User role updated to ADMIN', data: user })
-})
-
-const convertToUserController = asyncHandler(async (req, res) => {
-  const user = await updateUserByEmail(req.body.userEmail, { role: 'USER', permissions: [] })
-  return res.json({ success: true, error: false, message: 'User role updated to USER', data: user })
-})
-
 const suspendUserController = asyncHandler(async (req, res) => {
-  const user = await updateUserByEmail(req.body.userEmail, { status: 'Suspended' })
+  const user = await updateUserByEmail(req.body.userEmail, { status: 'Suspended' }, { role: 'USER' })
   void sendMail(
     user.email,
     'Suspension Notice | Scan My Meal',
@@ -171,7 +162,7 @@ const suspendUserController = asyncHandler(async (req, res) => {
 })
 
 const activateUserController = asyncHandler(async (req, res) => {
-  const user = await updateUserByEmail(req.body.userEmail, { status: 'Active' })
+  const user = await updateUserByEmail(req.body.userEmail, { status: 'Active' }, { role: 'USER' })
   return res.json({ success: true, error: false, message: 'User activated', data: user })
 })
 
@@ -219,8 +210,6 @@ module.exports = {
   getAllOrdersController,
   getOrderReportController,
   getAllUsersController,
-  convertToAdminController,
-  convertToUserController,
   suspendUserController,
   activateUserController,
   getAllProductsLengthController,
