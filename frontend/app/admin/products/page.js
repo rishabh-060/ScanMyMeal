@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, EyeOff, PackageOpen, Plus, Search, SlidersHorizontal, X } from 'lucide-react'
 import { toast } from 'react-toastify'
@@ -32,7 +32,7 @@ const ProductList = () => {
   const [stats, setStats] = useState({ total: 0, available: 0, lowStock: 0, outOfStock: 0, hidden: 0 })
   const requestId = useRef(0)
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     const currentRequest = ++requestId.current
     setLoading(true)
     try {
@@ -45,9 +45,9 @@ const ProductList = () => {
     } catch (error) {
       if (currentRequest === requestId.current) toast.error(error.response?.data?.message || 'Unable to load menu items')
     } finally { if (currentRequest === requestId.current) setLoading(false) }
-  }
+  }, [page, search, sort, status])
 
-  useEffect(() => { const timer = window.setTimeout(fetchProducts, search ? 300 : 0); return () => window.clearTimeout(timer) }, [page, search, status, sort])
+  useEffect(() => { const timer = window.setTimeout(fetchProducts, search ? 300 : 0); return () => window.clearTimeout(timer) }, [fetchProducts, search])
   if (!isAdmin(user.role)) return <RestrictUser />
 
   const chooseFilter = (value) => { setStatus(value); setPage(1) }

@@ -19,7 +19,7 @@ const resolveOffer = async (code, pricing, session) => {
   if (offer.type === 'PERCENTAGE') discount = roundCurrency(itemTotal * (offer.value / 100))
   if (offer.type === 'FIXED') discount = Math.min(itemTotal, roundCurrency(offer.value))
   if (offer.type === 'FREE_DELIVERY') discount = roundCurrency(pricing.deliveryCharge)
-  if (offer.maxDiscount != null) discount = Math.min(discount, roundCurrency(offer.maxDiscount))
+  if (Number(offer.maxDiscount) > 0) discount = Math.min(discount, roundCurrency(offer.maxDiscount))
   if (discount <= 0) throw new AppError('This offer does not apply to the current order', 409, 'OFFER_NOT_APPLICABLE')
   return { offer, discount: roundCurrency(discount) }
 }

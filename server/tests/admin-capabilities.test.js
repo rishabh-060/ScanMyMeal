@@ -19,3 +19,10 @@ test('offer discounts reduce the final total without changing base pricing', () 
   assert.equal(result.grandTotal, 412.5)
   assert.equal(pricing.grandTotal, 502.5)
 })
+
+test('a legacy zero maximum discount does not cancel an offer', () => {
+  const pricing = { subtotal: 500, discount: 0, tax: 25, serviceCharge: 0, deliveryCharge: 0, grandTotal: 525 }
+  const result = applyOffer(pricing, { offer: { code: 'SAVE20', maxDiscount: 0 }, discount: 100 })
+  assert.equal(result.offerDiscount, 100)
+  assert.equal(result.grandTotal, 425)
+})
