@@ -202,14 +202,6 @@ const summaryApi =  {
         url : '/api/admin/get-all-users',
         method : 'get'
     },
-    makeAdmin : {
-        url : '/api/admin/make-admin',
-        method : 'post'
-    },
-    makeUser : {
-        url : '/api/admin/make-user',
-        method : 'post'
-    },
     suspendUser : {
         url : '/api/admin/suspend-user',
         method : 'post'
@@ -278,12 +270,16 @@ const summaryApi =  {
         url : '/api/admin/access',
         method : 'get'
     },
+    createStaff : {
+        url : '/api/admin/access/staff',
+        method : 'post'
+    },
     adminDashboardSummary : {
         url : '/api/admin/dashboard-summary',
         method : 'get'
     },
-    updateAdminAccess : (userId) => ({
-        url : `/api/admin/access/users/${encodeURIComponent(userId)}`,
+    updateStaff : (userId) => ({
+        url : `/api/admin/access/staff/${encodeURIComponent(userId)}`,
         method : 'patch'
     }),
     adminOffers : {

@@ -37,6 +37,7 @@ const publicUser = (user) => ({
   last_login_date: user.last_login_date,
   status: user.status,
   role: user.role,
+  accountType: user.role === 'USER' ? 'CUSTOMER' : 'STAFF',
   permissions: user.permissions || [],
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
@@ -59,7 +60,7 @@ const registerUserController = asyncHandler(async (req, res) => {
     throw new AppError('Name, valid email, and an 8-character password are required', 400, 'INVALID_REGISTRATION')
   }
   if (await userModel.exists({ email })) throw new AppError('Email already registered', 409, 'EMAIL_EXISTS')
-  const user = await userModel.create({ name, email, password: await bcryptjs.hash(password, 12) })
+  const user = await userModel.create({ name, email, password: await bcryptjs.hash(password, 12), accountType: 'CUSTOMER' })
   void sendVerificationEmail(user)
   return res.status(201).json({
     success: true,

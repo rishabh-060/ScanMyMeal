@@ -1,12 +1,14 @@
 const { Router } = require('express')
 const auth = require('../middlewares/auth')
+const customerOnly = require('../middlewares/customerOnly')
 const { addToCartController, getCartController, updateCartItemQtyController, removeFromCartController } = require('../controllers/cartController')
 
 const cartRouter = Router()
 
-cartRouter.post('/add-cart', auth, addToCartController)
-cartRouter.get('/get-cart', auth, getCartController)
-cartRouter.put('/update-cart', auth, updateCartItemQtyController)
-cartRouter.delete('/delete-cart', auth, removeFromCartController)
+cartRouter.use(auth, customerOnly)
+cartRouter.post('/add-cart', addToCartController)
+cartRouter.get('/get-cart', getCartController)
+cartRouter.put('/update-cart', updateCartItemQtyController)
+cartRouter.delete('/delete-cart', removeFromCartController)
 
 module.exports = { cartRouter }

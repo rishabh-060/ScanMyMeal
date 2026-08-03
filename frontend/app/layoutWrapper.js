@@ -1,8 +1,8 @@
 'use client'
 
-import { Suspense } from 'react'
-import { usePathname } from 'next/navigation'
-import { Provider } from 'react-redux'
+import { Suspense, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Provider, useSelector } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import { store } from '@/public/store/store'
 import { GlobalProvider } from '@/provider/GlobalProvider'
@@ -10,6 +10,7 @@ import Navbar from '@/Components/Navbar'
 import Footer from '@/Components/Footer'
 import CartMobile from '@/Components/CartMobile'
 import RouteProgress from '@/Components/RouteProgress'
+import { isStaff } from '@/public/utils/isAdmin'
 
 const focusedRoutes = ['/login', '/signup', '/forgot-password', '/otp-verification', '/reset-password', '/verify-email']
 
@@ -31,6 +32,14 @@ const AppShellFallback = () => (
   </div>
 )
 
+const WorkspaceBoundary = ({ children, pathname }) => {
+  const user = useSelector((state) => state.user)
+  const router = useRouter()
+  const staffOutsideWorkspace = Boolean(user.id && isStaff(user.role) && !pathname.startsWith('/admin'))
+  useEffect(() => { if (staffOutsideWorkspace) router.replace('/admin') }, [router, staffOutsideWorkspace])
+  return staffOutsideWorkspace ? <AppShellFallback /> : children
+}
+
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname()
   const isAdmin = pathname.startsWith('/admin')
@@ -40,15 +49,17 @@ export default function LayoutWrapper({ children }) {
   return (
     <Provider store={store}>
       <GlobalProvider>
-        <Suspense fallback={null}><RouteProgress /></Suspense>
-        <Suspense fallback={<AppShellFallback />}>
-          <div className="app-shell">
-            {!isAdmin && <Navbar />}
-            <div className="app-content">{children}</div>
-            {showCart && <CartMobile />}
-            {!isAdmin && !isFocused && <Footer />}
-          </div>
-        </Suspense>
+        <WorkspaceBoundary pathname={pathname}>
+          <Suspense fallback={null}><RouteProgress /></Suspense>
+          <Suspense fallback={<AppShellFallback />}>
+            <div className="app-shell">
+              {!isAdmin && <Navbar />}
+              <div className="app-content">{children}</div>
+              {showCart && <CartMobile />}
+              {!isAdmin && !isFocused && <Footer />}
+            </div>
+          </Suspense>
+        </WorkspaceBoundary>
         <ToastContainer
           position="top-right"
           limit={1}

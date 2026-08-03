@@ -3,8 +3,8 @@ const { STAFF_ROLES, hasPermission } = require('../constants/permissions')
 
 const Admin = async (req, res, next) => {
   try {
-    const user = await userModel.findById(req.userId).select('role permissions status').lean()
-    if (!user || !STAFF_ROLES.includes(user.role) || user.status !== 'Active') {
+    const user = await userModel.findById(req.userId).select('role permissions status verify_email').lean()
+    if (!user || !STAFF_ROLES.includes(user.role) || user.status !== 'Active' || !user.verify_email) {
       return res.status(403).json({ success: false, error: true, message: 'Admin access required', code: 'ADMIN_REQUIRED' })
     }
     req.adminUser = user

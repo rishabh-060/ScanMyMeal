@@ -24,9 +24,9 @@ export const Button = ({ variant = 'primary', size = 'md', loading = false, clas
 }
 
 export const Input = ({ label, hint, error, id, className = '', ...props }) => (
-  <label className="grid gap-2 text-sm font-semibold text-[var(--color-text)]" htmlFor={id}>
+  <label className="grid content-start gap-2 self-start text-sm font-semibold text-[var(--color-text)]" htmlFor={id}>
     {label}
-    <input id={id} className={`min-h-12 rounded-[var(--radius-control)] border border-[var(--color-border)] bg-white px-4 py-2.5 text-[var(--color-text)] outline-none placeholder:text-neutral-400 hover:border-neutral-400 focus:border-[var(--color-primary)] focus:ring-4 focus:ring-orange-100 ${className}`} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined} {...props} />
+    <input id={id} className={`min-h-12 w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-white px-4 py-2.5 text-[var(--color-text)] outline-none placeholder:text-neutral-400 hover:border-neutral-400 focus:border-[var(--color-primary)] focus:ring-4 focus:ring-orange-100 ${className}`} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined} {...props} />
     {hint && !error && <span id={`${id}-hint`} className="text-xs font-normal text-[var(--color-muted)]">{hint}</span>}
     {error && <span id={`${id}-error`} role="alert" className="text-sm font-medium text-[var(--color-error)]">{error}</span>}
   </label>

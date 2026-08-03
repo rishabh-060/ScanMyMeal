@@ -1,12 +1,14 @@
 const { Router } = require('express')
 const auth = require('../middlewares/auth')
+const customerOnly = require('../middlewares/customerOnly')
 const { addAddressController, getAddressController, updateAddressController, removeAddressController } = require('../controllers/addressController')
 
 const addressRouter = Router()
 
-addressRouter.post('/add-address', auth, addAddressController)
-addressRouter.get('/get-address', auth, getAddressController)
-addressRouter.put('/update-address', auth, updateAddressController)
-addressRouter.delete('/delete-address', auth, removeAddressController )
+addressRouter.use(auth, customerOnly)
+addressRouter.post('/add-address', addAddressController)
+addressRouter.get('/get-address', getAddressController)
+addressRouter.put('/update-address', updateAddressController)
+addressRouter.delete('/delete-address', removeAddressController )
 
 module.exports = { addressRouter }
