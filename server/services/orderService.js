@@ -139,6 +139,23 @@ const clearCart = async (userId, session) => {
   ])
 }
 
+const previewOrderPricing = async ({ userId, offerCode }) => {
+  const items = await loadCheckoutItems(userId)
+  const calculated = calculatePricing(items, { deliveryCharge: 0, serviceCharge: 0 })
+  const resolvedOffer = await resolveOffer(offerCode, calculated.pricing)
+  calculated.pricing = applyOffer(calculated.pricing, resolvedOffer)
+  return {
+    pricing: calculated.pricing,
+    offer: resolvedOffer ? {
+      code: resolvedOffer.offer.code,
+      name: resolvedOffer.offer.name,
+      type: resolvedOffer.offer.type,
+      value: resolvedOffer.offer.value,
+      discount: resolvedOffer.discount,
+    } : null,
+  }
+}
+
 const createOrder = async ({ userId, idempotencyKey, input, paymentMethod }) => {
   const existing = await orderModel.findOne({ idempotencyKey })
   if (existing) return { order: existing, replayed: true }
@@ -371,6 +388,7 @@ const releaseExpiredReservations = async () => {
 
 module.exports = {
   createOrder,
+  previewOrderPricing,
   getIdempotencyKey,
   transitionOrder,
   restoreInventory,

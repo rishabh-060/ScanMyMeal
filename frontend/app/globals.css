@@ -39,7 +39,11 @@ body {
   @apply antialiased;
 }
 
-button, a, input, select, textarea { transition: all var(--duration-fast) ease; }
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: ease;
+}
 button, a { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), a { cursor: pointer; }
 ::selection { background: rgb(234 91 53 / 0.18); }

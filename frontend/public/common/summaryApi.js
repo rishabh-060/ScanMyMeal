@@ -158,6 +158,10 @@ const summaryApi =  {
         url : '/api/order/PAID-order',
         method : 'post'
     },
+    validateOffer : {
+        url : '/api/order/validate-offer',
+        method : 'post'
+    },
     myOrders : {
         url : '/api/order/get-orders',
         method : 'get'

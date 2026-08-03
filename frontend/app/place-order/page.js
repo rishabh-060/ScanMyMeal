@@ -37,6 +37,7 @@ const ORDER_OPTIONS = [
   { value: 'takeaway', label: 'Takeaway', icon: Store, note: 'Collect your order' },
 ]
 const TEST_CARD = '4242 4242 4242 4242'
+const money = (value) => Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })
 
 const finalUnitPrice = (product = {}) => {
   const price = Number(product.price || 0)
@@ -56,6 +57,8 @@ const CheckoutPage = () => {
   const [instructions, setInstructions] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [offerCode, setOfferCode] = useState('')
+  const [offerPreview, setOfferPreview] = useState(null)
+  const [applyingOffer, setApplyingOffer] = useState(false)
   const [openAddress, setOpenAddress] = useState(false)
   const [openQr, setOpenQr] = useState(false)
   const [loadingAction, setLoadingAction] = useState('')
@@ -76,6 +79,7 @@ const CheckoutPage = () => {
       if (context.publicId === tableId) setTableNumber(context.tableNumber || '')
     } catch (_error) { setTableNumber('') }
   }, [tableId])
+  useEffect(() => { setOfferPreview(null) }, [cartItem])
 
   const goBack = () => {
     if (window.history.length > 1) router.back()
@@ -110,9 +114,36 @@ const CheckoutPage = () => {
     return ''
   }
 
+  const applyOfferCode = async ({ quiet = false } = {}) => {
+    const normalized = offerCode.trim().toUpperCase()
+    if (!normalized) {
+      if (!quiet) toast.error('Enter an offer code first')
+      return null
+    }
+    setApplyingOffer(true)
+    try {
+      const response = await Axios({ ...summaryApi.validateOffer, data: { offerCode: normalized } })
+      const preview = response.data.data
+      setOfferPreview(preview)
+      if (!quiet) toast.success(response.data.message || `${normalized} applied`)
+      return preview
+    } catch (error) {
+      setOfferPreview(null)
+      toast.error(error.response?.data?.message || 'Unable to apply this offer')
+      return null
+    } finally {
+      setApplyingOffer(false)
+    }
+  }
+
   const submit = async (kind) => {
     const validationError = validate()
     if (validationError) return toast.error(validationError)
+    const normalizedOffer = offerCode.trim().toUpperCase()
+    if (normalizedOffer && offerPreview?.offer?.code !== normalizedOffer) {
+      const validOffer = await applyOfferCode({ quiet: true })
+      if (!validOffer) return
+    }
     idempotencyKey.current ||= crypto.randomUUID()
     setLoadingAction(kind)
     try {
@@ -218,9 +249,10 @@ const CheckoutPage = () => {
             })}
           </div>
           <div className="border-t border-black/[0.06] bg-[var(--color-surface-soft)]/35 p-5 sm:p-6">
-            <label className="grid gap-2 text-sm font-bold" htmlFor="offer-code"><span className="flex items-center gap-2"><Tag size={16} className="text-[var(--color-primary)]" /> Offer code</span><input id="offer-code" value={offerCode} onChange={(event) => setOfferCode(event.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))} placeholder="Enter promo code" className="min-h-11 rounded-xl border border-[var(--color-border)] bg-white px-3 font-mono uppercase outline-none focus:border-[var(--color-primary)] focus:ring-4 focus:ring-orange-100" /><span className="text-xs font-normal leading-5 text-[var(--color-muted)]">Eligibility and the final total are confirmed securely before the order is placed.</span></label>
+            <div className="grid gap-2 text-sm font-bold"><label className="flex items-center gap-2" htmlFor="offer-code"><Tag size={16} className="text-[var(--color-primary)]" /> Offer code</label><div className="flex gap-2"><input id="offer-code" value={offerCode} onChange={(event) => { setOfferCode(event.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '')); setOfferPreview(null) }} placeholder="Enter promo code" className="min-h-11 min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-3 font-mono uppercase outline-none focus:border-[var(--color-primary)] focus:ring-4 focus:ring-orange-100" /><Button type="button" size="sm" variant="outline" loading={applyingOffer} disabled={!offerCode.trim()} onClick={() => applyOfferCode()}>Apply</Button></div><span className="text-xs font-normal leading-5 text-[var(--color-muted)]">Apply the code to check eligibility and preview the final total.</span></div>
+            {offerPreview && <div role="status" className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"><span className="flex min-w-0 items-center gap-2 font-bold"><Check size={16} className="shrink-0" /><span className="truncate">{offerPreview.offer.name} applied</span></span><button type="button" className="text-xs font-bold underline" onClick={() => { setOfferCode(''); setOfferPreview(null) }}>Remove</button></div>}
             <div className="my-5 border-t border-dashed border-[var(--color-border)]" />
-            <div className="flex items-end justify-between gap-4"><div><p className="text-sm text-[var(--color-muted)]">Estimated item total</p><p className="mt-1 text-xs text-[var(--color-muted)]">Taxes and applicable charges follow</p></div><span className="text-2xl font-black tracking-tight">₹{totalCartPrice}</span></div>
+            <div className="space-y-2 text-sm"><div className="flex justify-between gap-4 text-[var(--color-muted)]"><span>Item total</span><span>₹{money(offerPreview ? offerPreview.pricing.subtotal - offerPreview.pricing.discount : totalCartPrice)}</span></div>{offerPreview && <><div className="flex justify-between gap-4 text-[var(--color-muted)]"><span>Tax</span><span>₹{money(offerPreview.pricing.tax)}</span></div><div className="flex justify-between gap-4 font-bold text-emerald-700"><span>Offer discount</span><span>−₹{money(offerPreview.pricing.offerDiscount)}</span></div></>}<div className="flex items-end justify-between gap-4 border-t border-dashed border-[var(--color-border)] pt-3"><div><p className="font-bold">{offerPreview ? 'Estimated total' : 'Estimated item total'}</p>{!offerPreview && <p className="mt-1 text-xs text-[var(--color-muted)]">Taxes and applicable charges follow</p>}</div><span className="text-2xl font-black tracking-tight">₹{money(offerPreview?.pricing.grandTotal ?? totalCartPrice)}</span></div></div>
 
             {isStripeTestMode && (
               <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-blue-950">

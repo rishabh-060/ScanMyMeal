@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Boxes, Edit3, EyeOff, Package, Sparkles, Trash2 } from 'lucide-react'
 import { toast } from 'react-toastify'
 import EditProduct from './EditProduct'
@@ -36,4 +36,4 @@ const ProductComponent = ({ data, fetchProducts }) => {
   )
 }
 
-export default ProductComponent
+export default memo(ProductComponent)

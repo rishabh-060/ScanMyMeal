@@ -1,7 +1,8 @@
 'use client'
 
 import { Loader2, X } from 'lucide-react'
-import { forwardRef, useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export const Button = ({ variant = 'primary', size = 'md', loading = false, className = '', children, disabled, ...props }) => {
   const variants = {
@@ -71,13 +72,19 @@ export const Skeleton = ({ className = '' }) => <div aria-hidden="true" classNam
 
 export const Modal = ({ title, children, onClose }) => {
   const dialogRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
   useEffect(() => {
+    if (!mounted) return undefined
+    const previouslyFocused = document.activeElement
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const focusable = dialogRef.current?.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])') || []
     focusable[0]?.focus()
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') return onClose?.()
+      if (event.key === 'Escape') return onCloseRef.current?.()
       if (event.key !== 'Tab' || !focusable.length) return
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
@@ -85,14 +92,20 @@ export const Modal = ({ title, children, onClose }) => {
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
     }
     document.addEventListener('keydown', onKeyDown)
-    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', onKeyDown) }
-  }, [onClose])
-  return (
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) previouslyFocused.focus()
+    }
+  }, [mounted])
+  if (!mounted) return null
+  return createPortal(
     <div className="fixed inset-0 z-[80] grid place-items-center bg-[#111914]/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modal-title" onMouseDown={(event) => event.target === event.currentTarget && onClose?.()}>
       <Card ref={dialogRef} className="relative max-h-[90vh] w-full max-w-2xl animate-fade-up overflow-y-auto p-5 sm:p-7">
         <div className="mb-5 flex items-center justify-between gap-4"><h2 id="modal-title" className="text-xl font-black tracking-tight">{title}</h2><Button size="sm" variant="ghost" aria-label="Close dialog" onClick={onClose}><X size={19} /></Button></div>
         {children}
       </Card>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -3,7 +3,7 @@ const userModel = require('../models/userModel')
 const { Stripe } = require('../config/stripe')
 const AppError = require('../utils/AppError')
 const asyncHandler = require('../utils/asyncHandler')
-const { createOrder, getIdempotencyKey } = require('../services/orderService')
+const { createOrder, getIdempotencyKey, previewOrderPricing } = require('../services/orderService')
 const { initiateStripeCheckout, processStripeEvent } = require('../services/paymentService')
 const { PAYMENT_METHODS } = require('../constants/order')
 
@@ -49,6 +49,16 @@ const CardPaymentController = asyncHandler(async (req, res) => {
       order: serializeOrder(result.order),
     },
     replayed: result.replayed,
+  })
+})
+
+const validateOfferController = asyncHandler(async (req, res) => {
+  const data = await previewOrderPricing({ userId: req.userId, offerCode: req.body.offerCode })
+  return res.json({
+    success: true,
+    error: false,
+    message: `${data.offer.code} applied successfully`,
+    data,
   })
 })
 
@@ -101,6 +111,7 @@ const getOrderDetailsController = asyncHandler(async (req, res) => {
 module.exports = {
   CashOnDeliveryController,
   CardPaymentController,
+  validateOfferController,
   webHookStripe,
   getOrderProductsController,
   getOrderDetailsController,
