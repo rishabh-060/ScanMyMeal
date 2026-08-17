@@ -1,16 +1,19 @@
 const nodemailer = require("nodemailer");
-const logger = require('../utils/logger')
+const logger = require('../utils/logger');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+if (!process.env.NODEMAILER_App_id || !process.env.NODEMAILER_App_Pass) {
+  throw new Error('Missing Gmail SMTP credentials. Set NODEMAILER_App_id and NODEMAILER_App_Pass in the mail-service .env file.');
+}
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  service: 'gmail',
   auth: {
     user: process.env.NODEMAILER_App_id,
     pass: process.env.NODEMAILER_App_Pass,
   },
-
-
 });
 
 async function sendMail(to, subject, text, html) {
